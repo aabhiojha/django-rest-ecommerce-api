@@ -1,0 +1,65 @@
+from django.db import models
+from core.models import BaseModel
+
+
+class Category(BaseModel):
+    name = models.CharField(max_length=200)
+    slug = models.SlugField(unique=True)
+    description = models.TextField(blank=True)
+    image = models.ImageField(upload_to="categories/", null=True, blank=True)
+    sort_order = models.IntegerField(default=0)
+    parent = models.ForeignKey(
+        "self", null=True, blank=True, related_name="children", on_delete=models.CASCADE
+    )
+
+    class Meta:
+        verbose_name_plural = "categories"
+        ordering = ["sort_order", "name"]
+
+    def __str__(self):
+        return f"Category {self.name}"
+
+
+class Product(BaseModel):
+    name = models.CharField(max_length=200)
+    slug = models.SlugField(unique=True)
+    description = models.TextField()
+    long_description = models.TextField(blank=True)
+    price = models.DecimalField(max_digits=8, decimal_places=2)
+    # stock keeping unit (nike shoes 11 red -> nike-sho-11-r)
+    sku = models.CharField(max_length=100, unique=True)
+    brand = models.CharField(blank=True, null=True)
+    weight = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
+    dimensions = models.CharField(max_length=100, blank=True)
+    is_featured = models.BooleanField(default=False)
+    is_digital = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"Product {self.name}"
+
+
+class ProductVarient(BaseModel):
+    product = models.ForeignKey(
+        Product, on_delete=models.CASCADE, related_name="vaients"
+    )
+    name = models.CharField(max_length=100)
+    sku = models.CharField(max_length=100, unique=True)
+    price = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
+
+
+class ProductImage(BaseModel):
+    product = models.ForeignKey(
+        Product, related_name="images", on_delete=models.CASCADE
+    )
+    image = models.ImageField(upload_to="products/")
+    alt_text = models.CharField(max_length=200, blank=True)
+    is_primary = models.BooleanField()
+    sort_order = models.IntegerField(default=0)
+
+
+class ProductAttribute(BaseModel):
+    product = models.ForeignKey(
+        Product, related_name="attributes", on_delete=models.CASCADE
+    )
+    name = models.CharField(max_length=100)
+    value = models.CharField(max_length=200)
