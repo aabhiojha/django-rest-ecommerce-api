@@ -56,11 +56,4 @@ class Address(BaseModel):
     user = models.ForeignKey(User, related_name="addresses", on_delete=models.CASCADE)
     address = models.CharField(max_length=200)
     address_descripton = models.CharField(max_length=200)
-    type = models.CharField(
-        max_length=20,
-        choices=[
-            ("billing", "Billing"),
-            ("shipping", "Shipping"),
-        ],
-    )
     is_primary = models.BooleanField(default=False)
