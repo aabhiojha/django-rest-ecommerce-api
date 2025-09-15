@@ -4,6 +4,7 @@ from .serializers import (
     CategoryDetailSerializer,
     CategoryCreateSerializer,
     ProductListSerializer,
+    ProductDetailSerializer,
 )
 
 from .models import Category, ProductVarient, ProductImage, ProductAttribute, Product
@@ -28,3 +29,15 @@ class CategoryCreateAPIView(generics.CreateAPIView):
 class ProductListAPIView(generics.ListAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductListSerializer
+    filterset_fields = ["category"]
+
+
+class ProductDetailAPIView(generics.RetrieveAPIView):
+    queryset = Product.objects.select_related("category").prefetch_related(
+        "images", "varients", "attributes"
+    )
+    lookup_field = "pk"
+    serializer_class = ProductDetailSerializer
+
+    def get_queryset(self):
+        return super().get_queryset().filter(is_active=True)

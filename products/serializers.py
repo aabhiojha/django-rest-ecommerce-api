@@ -127,7 +127,10 @@ class ProductListSerializer(serializers.ModelSerializer):
 
 
 class ProductDetailSerializer(serializers.ModelSerializer):
-    category = CategoryListSerializer(many=True, read_only=True)
+    category = CategoryListSerializer(read_only=True)
+    varients = ProductVarientSerializer(read_only=True)
+    images = ProductImageSerializer(read_only=True)
+    attributes = ProductAttributeSerializer(read_only=True)
 
     class Meta:
         model = Product
@@ -135,14 +138,18 @@ class ProductDetailSerializer(serializers.ModelSerializer):
             "name",
             "slug",
             "category",
+            "varients",
+            "images",
+            "attributes",
             "description",
             "long_description",
             "price",
             "sku",
             "brand",
-            "primary_image",
             "weight",
             "dimensions",
             "is_featured",
             "is_digital",
+            "created_at",
+            "updated_at",
         ]
