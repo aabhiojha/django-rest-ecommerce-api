@@ -1,6 +1,6 @@
 from django.db import models
 from accounts.models import User
-from products.models import Product, ProductAttribute, ProductVarient
+from products.models import Product, ProductVarient
 
 # to do
 # show the total no of items in cart
@@ -20,19 +20,29 @@ class Cart(models.Model):
     @property
     def total(self):
         # getall items in the cart and then sum
-        return sum(item.total_price for item in self.cart_item.all())
+        return sum(item.total_price for item in self.cart_items.all())
         # total = 0
         # for item in self.cart_items.all():
         # total += item.total_price
         # return total
 
 
+# alright, I can add any product varient for any product.
+# i need to accept cart items with the products that actually have the posted varients.
+# or maybe list all the product varients of the product
 class CartItem(models.Model):
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name="cart_items")
     product = models.ForeignKey(
-        Product, on_delete=models.CASCADE, related_name="products"
+        Product,
+        on_delete=models.CASCADE,
+        related_name="products",
     )
-    product_varient = models.ForeignKey(ProductVarient, on_delete=models.CASCADE)
+    product_varient = models.ForeignKey(
+        ProductVarient,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
     quantity = models.IntegerField(default=1)
 
     # @property
@@ -49,3 +59,6 @@ class CartItem(models.Model):
     @property
     def total_price(self):
         return self.unit_price * self.quantity
+
+    class Meta:
+        unique_together = ["cart", "product", "product_varient"]

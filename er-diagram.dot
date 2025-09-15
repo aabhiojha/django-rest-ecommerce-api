@@ -1,6 +1,6 @@
 digraph model_graph {
   // Dotfile by Django-Extensions graph_models
-  // Created: 2025-09-14 11:22
+  // Created: 2025-09-15 08:59
   // Cli Options: -a -o er-diagram.dot
 
   fontname = "Roboto"
@@ -806,9 +806,9 @@ digraph model_graph {
   
   
     <TR><TD ALIGN="LEFT" BORDER="0">
-    <FONT FACE="Roboto">slug</FONT>
+    <FONT COLOR="#7B7B7B" FACE="Roboto">slug</FONT>
     </TD><TD ALIGN="LEFT">
-    <FONT FACE="Roboto">SlugField</FONT>
+    <FONT COLOR="#7B7B7B" FACE="Roboto">SlugField</FONT>
     </TD></TR>
   
   
@@ -843,6 +843,14 @@ digraph model_graph {
     <FONT FACE="Roboto"><B>id</B></FONT>
     </TD><TD ALIGN="LEFT">
     <FONT FACE="Roboto"><B>BigAutoField</B></FONT>
+    </TD></TR>
+  
+  
+  
+    <TR><TD ALIGN="LEFT" BORDER="0">
+    <FONT COLOR="#7B7B7B" FACE="Roboto"><B>category</B></FONT>
+    </TD><TD ALIGN="LEFT">
+    <FONT COLOR="#7B7B7B" FACE="Roboto"><B>ForeignKey (id)</B></FONT>
     </TD></TR>
   
   
@@ -936,9 +944,9 @@ digraph model_graph {
   
   
     <TR><TD ALIGN="LEFT" BORDER="0">
-    <FONT FACE="Roboto">slug</FONT>
+    <FONT COLOR="#7B7B7B" FACE="Roboto">slug</FONT>
     </TD><TD ALIGN="LEFT">
-    <FONT FACE="Roboto">SlugField</FONT>
+    <FONT COLOR="#7B7B7B" FACE="Roboto">SlugField</FONT>
     </TD></TR>
   
   
@@ -1186,6 +1194,85 @@ digraph model_graph {
 
 
 
+  cart_models_Cart [label=<
+    <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0">
+    <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
+    <FONT FACE="Roboto" COLOR="white" POINT-SIZE="10"><B>
+    Cart
+    </B></FONT></TD></TR>
+  
+  
+    <TR><TD ALIGN="LEFT" BORDER="0">
+    <FONT FACE="Roboto"><B>id</B></FONT>
+    </TD><TD ALIGN="LEFT">
+    <FONT FACE="Roboto"><B>BigAutoField</B></FONT>
+    </TD></TR>
+  
+  
+  
+    <TR><TD ALIGN="LEFT" BORDER="0">
+    <FONT FACE="Roboto"><B>user</B></FONT>
+    </TD><TD ALIGN="LEFT">
+    <FONT FACE="Roboto"><B>ForeignKey (id)</B></FONT>
+    </TD></TR>
+  
+  
+    </TABLE>
+    >]
+
+  cart_models_CartItem [label=<
+    <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0">
+    <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
+    <FONT FACE="Roboto" COLOR="white" POINT-SIZE="10"><B>
+    CartItem
+    </B></FONT></TD></TR>
+  
+  
+    <TR><TD ALIGN="LEFT" BORDER="0">
+    <FONT FACE="Roboto"><B>id</B></FONT>
+    </TD><TD ALIGN="LEFT">
+    <FONT FACE="Roboto"><B>BigAutoField</B></FONT>
+    </TD></TR>
+  
+  
+  
+    <TR><TD ALIGN="LEFT" BORDER="0">
+    <FONT FACE="Roboto"><B>cart</B></FONT>
+    </TD><TD ALIGN="LEFT">
+    <FONT FACE="Roboto"><B>ForeignKey (id)</B></FONT>
+    </TD></TR>
+  
+  
+  
+    <TR><TD ALIGN="LEFT" BORDER="0">
+    <FONT FACE="Roboto"><B>product</B></FONT>
+    </TD><TD ALIGN="LEFT">
+    <FONT FACE="Roboto"><B>ForeignKey (id)</B></FONT>
+    </TD></TR>
+  
+  
+  
+    <TR><TD ALIGN="LEFT" BORDER="0">
+    <FONT COLOR="#7B7B7B" FACE="Roboto"><B>product_varient</B></FONT>
+    </TD><TD ALIGN="LEFT">
+    <FONT COLOR="#7B7B7B" FACE="Roboto"><B>ForeignKey (id)</B></FONT>
+    </TD></TR>
+  
+  
+  
+    <TR><TD ALIGN="LEFT" BORDER="0">
+    <FONT FACE="Roboto">quantity</FONT>
+    </TD><TD ALIGN="LEFT">
+    <FONT FACE="Roboto">IntegerField</FONT>
+    </TD></TR>
+  
+  
+    </TABLE>
+    >]
+
+
+
+
   // Relations
 
   django_contrib_admin_models_LogEntry -> accounts_models_User
@@ -1260,11 +1347,14 @@ digraph model_graph {
   products_models_Category -> core_models_BaseModel
   [label=" abstract\ninheritance"] [arrowhead=empty, arrowtail=none, dir=both];
 
+  products_models_Product -> products_models_Category
+  [label=" category (products)"] [arrowhead=none, arrowtail=dot, dir=both];
+
   products_models_Product -> core_models_BaseModel
   [label=" abstract\ninheritance"] [arrowhead=empty, arrowtail=none, dir=both];
 
   products_models_ProductVarient -> products_models_Product
-  [label=" product (vaients)"] [arrowhead=none, arrowtail=dot, dir=both];
+  [label=" product (varients)"] [arrowhead=none, arrowtail=dot, dir=both];
 
   products_models_ProductVarient -> core_models_BaseModel
   [label=" abstract\ninheritance"] [arrowhead=empty, arrowtail=none, dir=both];
@@ -1280,6 +1370,19 @@ digraph model_graph {
 
   products_models_ProductAttribute -> core_models_BaseModel
   [label=" abstract\ninheritance"] [arrowhead=empty, arrowtail=none, dir=both];
+
+
+  cart_models_Cart -> accounts_models_User
+  [label=" user (carts)"] [arrowhead=none, arrowtail=dot, dir=both];
+
+  cart_models_CartItem -> cart_models_Cart
+  [label=" cart (cart_items)"] [arrowhead=none, arrowtail=dot, dir=both];
+
+  cart_models_CartItem -> products_models_Product
+  [label=" product (products)"] [arrowhead=none, arrowtail=dot, dir=both];
+
+  cart_models_CartItem -> products_models_ProductVarient
+  [label=" product_varient (cartitem)"] [arrowhead=none, arrowtail=dot, dir=both];
 
 
 }

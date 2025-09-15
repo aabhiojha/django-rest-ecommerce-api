@@ -22,5 +22,3 @@ class ProductFilter(FilterSet):
             "is_featured",
             "name",
         ]
-
-        # fields = "__all__"
