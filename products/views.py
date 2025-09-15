@@ -1,4 +1,7 @@
 from rest_framework import generics
+
+# from rest_framework import filters
+# from django_filters.rest_framework import DjangoFilterBackend
 from .serializers import (
     CategoryListSerializer,
     CategoryDetailSerializer,
@@ -8,6 +11,9 @@ from .serializers import (
 )
 
 from .models import Category, ProductVarient, ProductImage, ProductAttribute, Product
+
+from .pagination import ProductCursorPagination
+from .filters import ProductFilter
 
 
 class CategoryListCreateAPIView(generics.ListCreateAPIView):
@@ -27,9 +33,12 @@ class CategoryCreateAPIView(generics.CreateAPIView):
 
 # Product
 class ProductListAPIView(generics.ListAPIView):
-    queryset = Product.objects.all()
+    queryset = Product.objects.all().order_by("-created_at")
     serializer_class = ProductListSerializer
-    filterset_fields = ["category"]
+    pagination_class = ProductCursorPagination
+    # filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    filterset_class = ProductFilter
+    search_fields = ["name", "brand", "description", "sku"]
 
 
 class ProductDetailAPIView(generics.RetrieveAPIView):
@@ -38,6 +47,3 @@ class ProductDetailAPIView(generics.RetrieveAPIView):
     )
     lookup_field = "pk"
     serializer_class = ProductDetailSerializer
-
-    def get_queryset(self):
-        return super().get_queryset().filter(is_active=True)

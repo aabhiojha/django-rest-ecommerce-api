@@ -127,10 +127,10 @@ class ProductListSerializer(serializers.ModelSerializer):
 
 
 class ProductDetailSerializer(serializers.ModelSerializer):
-    category = CategoryListSerializer(read_only=True)
-    varients = ProductVarientSerializer(read_only=True)
-    images = ProductImageSerializer(read_only=True)
-    attributes = ProductAttributeSerializer(read_only=True)
+    # category = CategoryListSerializer(read_only=True)
+    varients = ProductVarientSerializer(many=True, read_only=True)
+    images = ProductImageSerializer(many=True, read_only=True)
+    attributes = ProductAttributeSerializer(many=True, read_only=True)
 
     class Meta:
         model = Product
