@@ -16,11 +16,11 @@ class ProductFilter(FilterSet):
 
     class Meta:
         model = Product
-        # fields = [
-        #     "brand",
-        #     "category",
-        #     "is_featured",
-        #     "name",
-        # ]
+        fields = [
+            "brand",
+            "category",
+            "is_featured",
+            "name",
+        ]
 
-        fields = "__all__"
+        # fields = "__all__"
