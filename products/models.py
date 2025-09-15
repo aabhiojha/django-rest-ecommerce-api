@@ -4,7 +4,7 @@ from core.models import BaseModel
 
 class Category(BaseModel):
     name = models.CharField(max_length=200)
-    slug = models.SlugField(unique=True)
+    slug = models.SlugField(unique=True, blank=True)
     description = models.TextField(blank=True)
     image = models.ImageField(upload_to="categories/", null=True, blank=True)
     sort_order = models.IntegerField(default=0)
@@ -12,9 +12,10 @@ class Category(BaseModel):
         "self", null=True, blank=True, related_name="children", on_delete=models.CASCADE
     )
 
-    class Meta:
-        verbose_name_plural = "categories"
-        ordering = ["sort_order", "name"]
+    def save(self, *args, **kwargs):
+        stripped_name = self.name.lower().split(" ")
+        self.slug = "-".join(stripped_name)
+        return super().save(*args, **kwargs)
 
     def __str__(self):
         return f"Category {self.name}"
@@ -22,7 +23,14 @@ class Category(BaseModel):
 
 class Product(BaseModel):
     name = models.CharField(max_length=200)
-    slug = models.SlugField(unique=True)
+    slug = models.SlugField(unique=True, blank=True)
+    category = models.ForeignKey(
+        Category,
+        on_delete=models.CASCADE,
+        related_name="products",
+        null=True,
+        blank=True,
+    )
     description = models.TextField()
     long_description = models.TextField(blank=True)
     price = models.DecimalField(max_digits=8, decimal_places=2)
@@ -34,13 +42,18 @@ class Product(BaseModel):
     is_featured = models.BooleanField(default=False)
     is_digital = models.BooleanField(default=False)
 
+    def save(self, *args, **kwargs):
+        stripped_name = self.name.lower().split(" ")
+        self.slug = "-".join(stripped_name)
+        return super().save(*args, **kwargs)
+
     def __str__(self):
         return f"Product {self.name}"
 
 
 class ProductVarient(BaseModel):
     product = models.ForeignKey(
-        Product, on_delete=models.CASCADE, related_name="vaients"
+        Product, on_delete=models.CASCADE, related_name="varients"
     )
     name = models.CharField(max_length=100)
     sku = models.CharField(max_length=100, unique=True)
