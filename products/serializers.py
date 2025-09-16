@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Category, Product, ProductAttribute, ProductImage, ProductVarient
+from .models import Category, Product, ProductImage, ProductVarient
 from django.utils.text import slugify
 
 
@@ -90,11 +90,11 @@ class ProductImageSerializer(serializers.ModelSerializer):
         fields = ["id", "alt_text", "is_primary", "sort_order"]
 
 
-# product attribute
-class ProductAttributeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ProductAttribute
-        fields = ["id", "name", "value"]
+# # product attribute
+# class ProductAttributeSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = ProductAttribute
+#         fields = ["id", "name", "value"]
 
 
 class ProductListSerializer(serializers.ModelSerializer):
@@ -130,7 +130,7 @@ class ProductDetailSerializer(serializers.ModelSerializer):
     # category = CategoryListSerializer(read_only=True)
     varients = ProductVarientSerializer(many=True, read_only=True)
     images = ProductImageSerializer(many=True, read_only=True)
-    attributes = ProductAttributeSerializer(many=True, read_only=True)
+    # attributes = ProductAttributeSerializer(many=True, read_only=True)
 
     class Meta:
         model = Product
@@ -140,7 +140,8 @@ class ProductDetailSerializer(serializers.ModelSerializer):
             "category",
             "varients",
             "images",
-            "attributes",
+            # "attributes",
+            "additional_info",
             "description",
             "long_description",
             "price",

@@ -10,7 +10,7 @@ from .serializers import (
     ProductDetailSerializer,
 )
 
-from .models import Category, ProductVarient, ProductImage, ProductAttribute, Product
+from .models import Category, ProductVarient, ProductImage, Product
 
 from .pagination import ProductCursorPagination
 from .filters import ProductFilter

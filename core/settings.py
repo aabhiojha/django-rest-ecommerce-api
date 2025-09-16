@@ -40,10 +40,11 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "rest_framework.authtoken",
+    "django_extensions",
+    "drf_spectacular",
+    "django_filters",
     "accounts",
     "products",
-    "django_extensions",
-    "django_filters",
     "cart",
 ]
 
@@ -161,4 +162,14 @@ REST_FRAMEWORK = {
         "rest_framework.filters.SearchFilter",
         "rest_framework.filters.OrderingFilter",
     ],
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
+
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "ecommerce API",
+    "DESCRIPTION": "My Ecommerce api",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    # OTHER SETTINGS
 }

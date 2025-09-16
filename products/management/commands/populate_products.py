@@ -24,7 +24,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         if options["clear"]:
             self.stdout.write(self.style.WARNING("Clearing existing data..."))
-            ProductAttribute.objects.all().delete()
+            # ProductAttribute.objects.all().delete()
             ProductImage.objects.all().delete()
             ProductVarient.objects.all().delete()
             Product.objects.all().delete()
@@ -353,11 +353,11 @@ class Command(BaseCommand):
             parent_category = product.category.parent or product.category
             category_attributes = attribute_data.get(parent_category.name, [])
 
-            for attr_name, attr_values in category_attributes:
-                value = random.choice(attr_values)
-                ProductAttribute.objects.create(
-                    product=product, name=attr_name, value=value
-                )
+            # for attr_name, attr_values in category_attributes:
+            #     value = random.choice(attr_values)
+            #     ProductAttribute.objects.create(
+            #         product=product, name=attr_name, value=value
+            #     )
 
         self.stdout.write("Created product attributes")
 

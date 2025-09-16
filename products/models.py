@@ -31,16 +31,19 @@ class Product(BaseModel):
         null=True,
         blank=True,
     )
-    description = models.TextField()
-    long_description = models.TextField(blank=True)
+    description = models.TextField(default="", help_text="Short Description")
+    long_description = models.TextField(
+        blank=True, default="", help_text="Long Description"
+    )
     price = models.DecimalField(max_digits=8, decimal_places=2)
     # stock keeping unit (nike shoes 11 red -> nike-sho-11-r)
     sku = models.CharField(max_length=100, unique=True)
-    brand = models.CharField(blank=True, null=True)
-    weight = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
+    brand = models.CharField(blank=True, default="")
+    weight = models.DecimalField(max_digits=8, decimal_places=2, default=0.00)
     dimensions = models.CharField(max_length=100, blank=True)
     is_featured = models.BooleanField(default=False)
     is_digital = models.BooleanField(default=False)
+    additional_info = models.JSONField(default=dict)
 
     def save(self, *args, **kwargs):
         stripped_name = self.name.lower().split(" ")
@@ -57,7 +60,9 @@ class ProductVarient(BaseModel):
     )
     name = models.CharField(max_length=100)
     sku = models.CharField(max_length=100, unique=True)
-    price = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
+    price = models.DecimalField(
+        max_digits=8, decimal_places=2, default=0.00, blank=True
+    )
 
     def __str__(self):
         return f"{self.product.name}'s {self.sku}"
@@ -73,9 +78,9 @@ class ProductImage(BaseModel):
     sort_order = models.IntegerField(default=0)
 
 
-class ProductAttribute(BaseModel):
-    product = models.ForeignKey(
-        Product, related_name="attributes", on_delete=models.CASCADE
-    )
-    name = models.CharField(max_length=100)
-    value = models.CharField(max_length=200)
+# class ProductAttribute(BaseModel):
+#     product = models.ForeignKey(
+#         Product, related_name="attributes", on_delete=models.CASCADE
+#     )
+#     name = models.CharField(max_length=100)
+#     value = models.CharField(max_length=200)

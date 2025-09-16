@@ -11,7 +11,7 @@ from products.models import Product, ProductVarient
 
 
 class Cart(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="carts")
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
 
     @property
     def item_count(self):
@@ -43,7 +43,7 @@ class CartItem(models.Model):
         null=True,
         blank=True,
     )
-    quantity = models.IntegerField(default=1)
+    quantity = models.PositiveIntegerField(default=1)
 
     # @property
     # def in_stock(self):
