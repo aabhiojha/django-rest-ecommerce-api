@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from products.models import Product, ProductVarient
-from .models import Cart, CartItem
+from .models import Cart, CartItem, Favourite
 
 
 class CartItemSerializer(serializers.ModelSerializer):
@@ -138,3 +138,38 @@ class UpdateCartItemQuantitySerializer(serializers.ModelSerializer):
     class Meta:
         model = CartItem
         fields = ["quantity"]
+
+
+# favourite
+class ListFavouriteSerializer(serializers.ModelSerializer):
+    product_name = serializers.CharField(source="product.name", read_only=True)
+
+    class Meta:
+        model = Favourite
+        fields = ["id", "product", "product_name"]
+
+
+class CreateFavouriteSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Favourite
+        fields = ["product"]
+
+    def create(self, validated_data):
+        try:
+            user = self.context["request"].user
+            favourite = Favourite.objects.create(user=user, **validated_data)
+            return favourite
+        except Exception as e:
+            raise serializers.ValidationError({"error": "Could not add to favorites."})
+
+    # def validate(self, attrs):
+    #     product = attrs["product"]
+
+    #     return super().validate(attrs)
+
+
+class RemoveFavouriteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Favourite
+        fields = []

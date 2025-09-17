@@ -1,10 +1,13 @@
 from rest_framework import generics
-from .models import Cart, CartItem
+from .models import Cart, CartItem, Favourite
 from .serializers import (
     CartItemSerializer,
     CartSerializer,
     UpdateCartItemQuantitySerializer,
     AddItemSerializer,
+    ListFavouriteSerializer,
+    RemoveFavouriteSerializer,
+    CreateFavouriteSerializer,
 )
 from rest_framework.response import Response
 from rest_framework import status
@@ -54,3 +57,21 @@ class CartItemQuantityUpdateAPIView(generics.UpdateAPIView):
 class CartItemQuantityDeleteAPIView(generics.DestroyAPIView):
     lookup_field = "pk"
     queryset = CartItem.objects.all()
+
+
+class ListFavouriteAPIView(generics.ListAPIView):
+    queryset = Favourite.objects.all()
+    serializer_class = ListFavouriteSerializer
+
+
+class CreateFavouriteAPIView(generics.CreateAPIView):
+    serializer_class = CreateFavouriteSerializer
+
+
+class DeleteFavouriteAPIView(generics.DestroyAPIView):
+    queryset = Favourite.objects.all()
+    lookup_field = "pk"
+    serializer_class = RemoveFavouriteSerializer
+
+    def get_queryset(self):
+        return self.queryset.filter(user=self.request.user)

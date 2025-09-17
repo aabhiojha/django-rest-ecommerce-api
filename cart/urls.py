@@ -7,4 +7,7 @@ urlpatterns = [
     path("item/add/", views.CartItemAddAPIView.as_view()),
     path("item/update/<int:pk>/", views.CartItemQuantityUpdateAPIView.as_view()),
     path("item/delete/<int:pk>/", views.CartItemQuantityDeleteAPIView.as_view()),
+    path("favorite/list/", views.ListFavouriteAPIView.as_view()),
+    path("favorite/create/", views.CreateFavouriteAPIView.as_view()),
+    path("favorite/delete/", views.DeleteFavouriteAPIView.as_view()),
 ]
