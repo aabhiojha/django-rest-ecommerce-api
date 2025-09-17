@@ -6,8 +6,10 @@ from .serializers import (
     CategoryListSerializer,
     CategoryDetailSerializer,
     CategoryCreateSerializer,
+    ProductCreateSerializer,
     ProductListSerializer,
     ProductDetailSerializer,
+    ProductUpdateSerializer,
 )
 
 from .models import Category, ProductVarient, ProductImage, Product
@@ -39,6 +41,16 @@ class ProductListAPIView(generics.ListAPIView):
     # filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_class = ProductFilter
     search_fields = ["name", "brand", "description", "sku"]
+
+
+class ProductCreateAPIView(generics.CreateAPIView):
+    serializer_class = ProductCreateSerializer
+
+
+class ProductUpdateAPIView(generics.UpdateAPIView):
+    queryset = Product.objects.all()
+    lookup_field = "pk"
+    serializer_class = ProductUpdateSerializer
 
 
 class ProductDetailAPIView(generics.RetrieveAPIView):

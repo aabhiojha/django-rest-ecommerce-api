@@ -1,5 +1,6 @@
 from django.db import models
 from core.models import BaseModel
+from products.model_validators import validate_price
 
 
 class Category(BaseModel):
@@ -18,7 +19,7 @@ class Category(BaseModel):
         return super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"Category {self.name}"
+        return f"Category {self.id}: {self.name}"
 
 
 class Product(BaseModel):
@@ -35,7 +36,9 @@ class Product(BaseModel):
     long_description = models.TextField(
         blank=True, default="", help_text="Long Description"
     )
-    price = models.DecimalField(max_digits=8, decimal_places=2)
+    price = models.DecimalField(
+        max_digits=8, decimal_places=2, validators=[validate_price]
+    )
     # stock keeping unit (nike shoes 11 red -> nike-sho-11-r)
     sku = models.CharField(max_length=100, unique=True)
     brand = models.CharField(blank=True, default="")

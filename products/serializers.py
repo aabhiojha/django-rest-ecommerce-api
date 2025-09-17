@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from .models import Category, Product, ProductImage, ProductVarient
 from django.utils.text import slugify
-
+from core.utils.custom_slugify import slugify_name
 
 # Category serializers
 
@@ -104,6 +104,7 @@ class ProductListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = [
+            "id",
             "name",
             "slug",
             "category",
@@ -154,3 +155,73 @@ class ProductDetailSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
+
+
+class ProductCreateSerializer(serializers.ModelSerializer):
+    varients = ProductVarientSerializer(many=True)
+
+    class Meta:
+        model = Product
+        fields = [
+            "name",
+            "slug",
+            "category",
+            # "images",
+            # "attributes",
+            "additional_info",
+            "description",
+            "long_description",
+            "price",
+            "sku",
+            "brand",
+            "weight",
+            "dimensions",
+            "varients",
+            "is_featured",
+            "is_digital",
+            "created_at",
+            "updated_at",
+        ]
+
+    def create(self, validated_data):
+        varient_values = validated_data.pop("varients")
+        product = Product.objects.create(**validated_data)
+        if varient_values:
+            for varient in varient_values:
+                created = ProductVarient.objects.create(product=product, **varient)
+                print(created)
+            return product
+
+
+class ProductUpdateSerializer(serializers.ModelSerializer):
+    varients = ProductVarientSerializer(many=True)
+
+    class Meta:
+        model = Product
+        fields = [
+            "name",
+            "slug",
+            "category",
+            "additional_info",
+            "description",
+            "long_description",
+            "price",
+            "sku",
+            "brand",
+            "weight",
+            "dimensions",
+            "varients",
+            "is_featured",
+            "is_digital",
+            "created_at",
+            "updated_at",
+        ]
+
+    def update(self, instance, validated_data):
+        varient_data = validated_data.pop("varients")
+        validated_data = slugify_name(Product, validated_data=validated_data)
+        product = Product.objects.update(**validated_data)
+        # sku =
+        for varient in varient_data:
+            ProductVarient.objects.update(product=product, **varient)
+        return product
