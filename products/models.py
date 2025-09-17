@@ -48,13 +48,16 @@ class Product(BaseModel):
     is_digital = models.BooleanField(default=False)
     additional_info = models.JSONField(default=dict)
 
+    class Meta:
+        ordering = ["id"]
+
     def save(self, *args, **kwargs):
         stripped_name = self.name.lower().split(" ")
         self.slug = "-".join(stripped_name)
         return super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.name}"
+        return f"{self.id}: {self.name}"
 
 
 class ProductVarient(BaseModel):
@@ -68,7 +71,7 @@ class ProductVarient(BaseModel):
     )
 
     def __str__(self):
-        return f"{self.product.name}'s {self.sku}"
+        return f"{self.id}: {self.product.name}'s {self.sku}"
 
 
 class ProductImage(BaseModel):
@@ -79,11 +82,3 @@ class ProductImage(BaseModel):
     alt_text = models.CharField(max_length=200, blank=True)
     is_primary = models.BooleanField()
     sort_order = models.IntegerField(default=0)
-
-
-# class ProductAttribute(BaseModel):
-#     product = models.ForeignKey(
-#         Product, related_name="attributes", on_delete=models.CASCADE
-#     )
-#     name = models.CharField(max_length=100)
-#     value = models.CharField(max_length=200)

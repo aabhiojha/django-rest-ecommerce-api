@@ -108,14 +108,33 @@ class AddItemSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CartItem
-        fields = ["product", "product_varient", "quantity"]
+        fields = [
+            "id",
+            "product",
+            "product_varient",
+            "quantity",
+        ]
+
+    def create(self, validated_data):
+        user = self.context["request"].user
+        product = self.validated_data["product"]
+        product_varient = self.validated_data["product_varient"]
+        quantity = self.validated_data["quantity"]
+        # suru ma ta cart chaiyooo of that user
+        cart, created = Cart.objects.get_or_create(user=user)
+        # check if cartitem already exists
+        cart_item, created = CartItem.objects.get_or_create(
+            cart=cart,
+            product=product,
+            product_varient=product_varient,
+            quantity=quantity,
+        )
+        return cart_item
 
 
-class UpdateCartItemSerializer(serializers.Serializer):
+class UpdateCartItemQuantitySerializer(serializers.ModelSerializer):
     quantity = serializers.IntegerField(min_value=1)
-    product = serializers.PrimaryKeyRelatedField(queryset=Product.objects.all())
 
-    def validate(self, attrs):
-        if attrs["quantity"] <= 0:
-            raise serializers.ValidationError("The quantity must be postive number")
-        return attrs
+    class Meta:
+        model = CartItem
+        fields = ["quantity"]

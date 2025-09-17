@@ -171,5 +171,4 @@ SPECTACULAR_SETTINGS = {
     "DESCRIPTION": "My Ecommerce api",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
-    # OTHER SETTINGS
 }
