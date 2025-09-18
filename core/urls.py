@@ -26,15 +26,9 @@ from drf_spectacular.views import (
     SpectacularRedocView,
 )
 
-
-urlpatterns = [
-    path("admin/", admin.site.urls),
-    path("auth/", include("accounts.urls")),
-    path("product/", include("products.urls")),
-    path("cart/", include("cart.urls")),
-    path("order/", include("orders.urls")),
-    path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
+schema_urls = [
     path(
+        path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
         "api/docs/swagger/",
         SpectacularSwaggerView.as_view(url_name="schema"),
         name="swagger-ui",
@@ -43,4 +37,13 @@ urlpatterns = [
         "api/docs/redoc/", SpectacularRedocView.as_view(url_name="schema"), name="redoc"
     ),
 ]
+
+urlpatterns = [
+    path("admin/", admin.site.urls),
+    path("auth/", include("accounts.urls")),
+    path("product/", include("products.urls")),
+    path("cart/", include("cart.urls")),
+    path("order/", include("orders.urls")),
+    path("payment/", include("payment.urls")),
+] + schema_urls
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

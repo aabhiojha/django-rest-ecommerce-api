@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Status</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            text-align: center;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            background-color: #fff;
+        }
+
+        .failure {
+            border: 2px solid #dc3545;
+        }
+
+        .icon {
+            font-size: 50px;
+            margin-bottom: 20px;
+        }
+
+        .failure .icon {
+            color: #dc3545;
+        }
+
+        .message {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .description {
+            font-size: 16px;
+            color: #666;
+        }
+
+        .button {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 20px;
+            text-decoration: none;
+            color: #fff;
+            border-radius: 5px;
+        }
+
+        .failure .button {
+            background-color: #dc3545;
+        }
+    </style>
+</head>
+
+<body>
+
+
+    <div class="container failure">
+        <div class="icon">❌</div>
+        <div class="message">Payment Failed</div>
+        <div class="description">Unfortunately, your payment could not be processed. Please try again.</div>
+        <a href="#" class="button">Retry Payment</a>
+    </div>
+
+</body>
+
+</html>
