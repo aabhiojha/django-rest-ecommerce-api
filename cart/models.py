@@ -47,6 +47,7 @@ class CartItem(models.Model):
         blank=True,
     )
     quantity = models.PositiveIntegerField(default=1)
+    purchased = models.BooleanField(default=False)
 
     # @property
     # def in_stock(self):

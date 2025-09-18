@@ -21,6 +21,9 @@ class Category(BaseModel):
     def __str__(self):
         return f"Category {self.id}: {self.name}"
 
+    class Meta:
+        verbose_name_plural = "Categories"
+
 
 class Product(BaseModel):
     name = models.CharField(max_length=200)
