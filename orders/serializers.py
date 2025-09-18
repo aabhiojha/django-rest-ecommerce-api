@@ -64,6 +64,7 @@ class OrderItemsCreateSerializer(serializers.ModelSerializer):
 
         existing_items = CartItem.objects.filter(id__in=value)
         existing_ids = set(existing_items.values_list("id", flat=True))
+        # gives the items that do not exist
         missing_ids = set(value) - existing_ids
 
         if missing_ids:

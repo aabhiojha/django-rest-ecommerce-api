@@ -16,11 +16,11 @@ class OrderListCreateAPIView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        # Only show orders for the authenticated user
+        # gets the orders of authenticated user
         return Order.objects.filter(user=self.request.user)
 
     def perform_create(self, serializer):
-        # Automatically set the user to the authenticated user
+        # this sets the user to the authenticated user
         serializer.save(user=self.request.user)
 
 
@@ -37,11 +37,17 @@ class OrderItemsCreateAPIView(generics.CreateAPIView):
     permission_classes = [IsAuthenticated]
 
     def create(self, request, *args, **kwargs):
+        # if someone is creating order for the first time
+        # also meaning if they didn't pass order, new one is created
+        if "order" not in request.data:
+            order = Order.objects.create(user=request.user, status="pending")
+            request.data["order"] = order.id
+
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        # Ensure the order belongs to the authenticated user
-        order = serializer.validated_data["order"]
+        # check to see if user has that order
+        order = serializer.validated_data.get("order")
         if order.user != request.user:
             return Response(
                 {"error": "You can only add items to your own orders"},
@@ -49,11 +55,9 @@ class OrderItemsCreateAPIView(generics.CreateAPIView):
             )
 
         result = serializer.save()
-        headers = self.get_success_headers(serializer.data)
         return Response(
             serializer.to_representation(result),
             status=status.HTTP_201_CREATED,
-            headers=headers,
         )
 
 
@@ -72,6 +76,4 @@ class UserOrdersListView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return Order.objects.filter(user=self.request.user).prefetch_related(
-            "order_items"
-        )
+        return Order.objects.filter(user=self.request.user)
