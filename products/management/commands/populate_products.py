@@ -5,7 +5,6 @@ from products.models import (
     Product,
     ProductVarient,
     ProductImage,
-    ProductAttribute,
 )
 import random
 from decimal import Decimal
@@ -24,7 +23,6 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         if options["clear"]:
             self.stdout.write(self.style.WARNING("Clearing existing data..."))
-            # ProductAttribute.objects.all().delete()
             ProductImage.objects.all().delete()
             ProductVarient.objects.all().delete()
             Product.objects.all().delete()
@@ -323,41 +321,43 @@ class Command(BaseCommand):
         self.stdout.write("Created product variants")
 
     def create_product_attributes(self):
-        """Create product attributes"""
+        """Create product attributes using additional_info JSON field"""
         products = Product.objects.all()
 
         attribute_data = {
-            "Electronics": [
-                ("Color", ["Black", "White", "Silver", "Gold", "Blue"]),
-                ("Warranty", ["1 Year", "2 Years"]),
-                ("Connectivity", ["WiFi", "Bluetooth", "5G", "USB-C"]),
-            ],
-            "Clothing": [
-                ("Material", ["Cotton", "Polyester", "Leather", "Denim"]),
-                ("Color", ["Black", "White", "Blue", "Red", "Green"]),
-                ("Care Instructions", ["Machine Wash", "Hand Wash", "Dry Clean"]),
-            ],
-            "Home & Garden": [
-                ("Material", ["Wood", "Metal", "Plastic", "Glass"]),
-                ("Color", ["White", "Black", "Brown", "Natural"]),
-                ("Assembly Required", ["Yes", "No"]),
-            ],
-            "Books": [
-                ("Format", ["Paperback", "Hardcover", "E-book"]),
-                ("Language", ["English", "Spanish", "French"]),
-                ("Pages", ["200-300", "300-400", "400+"]),
-            ],
+            "Electronics": {
+                "Color": ["Black", "White", "Silver", "Gold", "Blue"],
+                "Warranty": ["1 Year", "2 Years"],
+                "Connectivity": ["WiFi", "Bluetooth", "5G", "USB-C"],
+            },
+            "Clothing": {
+                "Material": ["Cotton", "Polyester", "Leather", "Denim"],
+                "Color": ["Black", "White", "Blue", "Red", "Green"],
+                "Care Instructions": ["Machine Wash", "Hand Wash", "Dry Clean"],
+            },
+            "Home & Garden": {
+                "Material": ["Wood", "Metal", "Plastic", "Glass"],
+                "Color": ["White", "Black", "Brown", "Natural"],
+                "Assembly Required": ["Yes", "No"],
+            },
+            "Books": {
+                "Format": ["Paperback", "Hardcover", "E-book"],
+                "Language": ["English", "Spanish", "French"],
+                "Pages": ["200-300", "300-400", "400+"],
+            },
         }
 
         for product in products:
             parent_category = product.category.parent or product.category
-            category_attributes = attribute_data.get(parent_category.name, [])
-
-            # for attr_name, attr_values in category_attributes:
-            #     value = random.choice(attr_values)
-            #     ProductAttribute.objects.create(
-            #         product=product, name=attr_name, value=value
-            #     )
+            category_attrs = attribute_data.get(parent_category.name, {})
+            
+            additional_info = {}
+            for attr_name, attr_values in category_attrs.items():
+                additional_info[attr_name] = random.choice(attr_values)
+            
+            if additional_info:
+                product.additional_info = additional_info
+                product.save()
 
         self.stdout.write("Created product attributes")
 
