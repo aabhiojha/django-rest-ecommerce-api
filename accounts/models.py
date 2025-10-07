@@ -40,13 +40,13 @@ class UserProfile(BaseModel):
     GENDER_CHOICES = [
         ("male", "Male"),
         ("female", "Female"),
-        ("othe", "Other"),
+        ("other", "Other"),
     ]
 
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    user_picture = models.ImageField(blank=True, null=True)
+    user_picture = models.ImageField(upload_to="profile_pictures/", blank=True, null=True)
     bio = models.TextField(max_length=500, blank=True)
-    gender = models.CharField(choices=GENDER_CHOICES, blank=True)
+    gender = models.CharField(choices=GENDER_CHOICES, max_length=10, blank=True)
 
     def __str__(self):
         return f"{self.user.email}'s profile"
@@ -55,5 +55,42 @@ class UserProfile(BaseModel):
 class Address(BaseModel):
     user = models.ForeignKey(User, related_name="addresses", on_delete=models.CASCADE)
     address = models.CharField(max_length=200)
-    address_descripton = models.CharField(max_length=200)
+    address_description = models.CharField(max_length=200)
     is_primary = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{self.address} ({'Primary' if self.is_primary else 'Secondary'})"
+
+# RBAC related models
+class PermissionCategory(models.Model):
+    class Meta:
+        verbose_name = "Permission Category"
+        verbose_name_plural = "Permission Categories"
+
+    name = models.CharField(max_length=200)
+    is_active = models.BooleanField(default=True)
+    def __str__(self):
+        return f"{self.name} permission category"
+    
+
+class Permission(models.Model):
+    name = models.CharField(max_length=200)
+    is_active = models.BooleanField(default=True)
+    code_name = models.CharField(max_length=100, unique=True)
+    category = models.ForeignKey(
+        PermissionCategory, on_delete=models.CASCADE, related_name="permissions"
+    )
+
+    def __str__(self):
+        return f"{self.category.name}'s -> {self.name}"
+
+
+class Role(models.Model):
+    name = models.CharField(max_length=200)
+    is_active = models.BooleanField(default=True)
+    permissions = models.ManyToManyField(
+        Permission, blank=True, related_name="roles"
+    )
+
+    def __str__(self):
+        return self.name
