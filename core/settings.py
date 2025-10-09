@@ -44,14 +44,15 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
-    "rest_framework.authtoken",
     "django_extensions",
     "drf_spectacular",
     "django_filters",
-    "accounts",
+    "rest_framework_simplejwt",
+    "users",
     "products",
     "cart",
     "orders",
+    "payment",
 ]
 
 MIDDLEWARE = [
@@ -67,7 +68,7 @@ MIDDLEWARE = [
 ROOT_URLCONF = "core.urls"
 
 
-AUTH_USER_MODEL = "accounts.User"
+AUTH_USER_MODEL = "users.User"
 
 TEMPLATES = [
     {
@@ -155,13 +156,10 @@ STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
-AUTH_USER_MODEL = "accounts.User"
-
-
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework.authentication.SessionAuthentication",
-        "rest_framework.authentication.TokenAuthentication",
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
     ],
     "DEFAULT_FILTER_BACKENDS": [
         "django_filters.rest_framework.DjangoFilterBackend",

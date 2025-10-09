@@ -1,5 +1,5 @@
 from django.db import models
-from accounts.models import User
+from users.models import User
 from core.utils.order_id_gen import unique_id
 from cart.models import CartItem
 from django.utils import timezone

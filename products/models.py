@@ -49,7 +49,7 @@ class Product(BaseModel):
     dimensions = models.CharField(max_length=100, blank=True)
     is_featured = models.BooleanField(default=False)
     is_digital = models.BooleanField(default=False)
-    additional_info = models.JSONField(default=dict)
+    additional_info = models.JSONField(default=dict, blank=True, null=True)
 
     class Meta:
         ordering = ["id"]
