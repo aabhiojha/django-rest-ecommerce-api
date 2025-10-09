@@ -5,7 +5,6 @@ from core.utils.order_id_gen import unique_id
 
 User = get_user_model()
 
-
 class Payment(models.Model):
     PAYMENT_STATUS_CHOICES = [
         ("pending", "Pending"),
@@ -33,4 +32,28 @@ class Payment(models.Model):
         ordering = ["-created_at"]
 
     def __str__(self):
-        return f"Payment {self.id} - {self.order.id} - ${self.amountd}"
+        return f"Payment {self.id} - {self.order.id} - ${self.amount}"
+    
+
+class StripePaymentIntent(models.Model):
+    """Stripe payment intent details"""
+    
+    payment = models.OneToOneField(
+        Payment,
+        on_delete=models.CASCADE,
+        related_name="stripe_intent",
+    )
+    stripe_payment_intent_id = models.CharField(max_length=255, unique=True)
+    client_secret = models.CharField(max_length=255)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    currency = models.CharField(max_length=3, default="usd")
+    status = models.CharField(max_length=50, default="requires_payment_method")
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ["-created_at"]
+    
+    def __str__(self):
+        return f"Intent {self.stripe_payment_intent_id} - Payment {self.payment.id}"
