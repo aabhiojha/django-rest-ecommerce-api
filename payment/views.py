@@ -1,3 +1,4 @@
+from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from django.http import HttpResponse
@@ -9,7 +10,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
-from orders.models import Order
+from cart.models import Cart, CartItem
+from orders.models import Order, OrderItems
 from payment.models import Payment
 from payment.serializers import PaymentSerializer, PaymentCreateSerializer
 
@@ -17,7 +19,9 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 
 
 class PaymentView(APIView):
-    """Create Stripe checkout session for an order"""
+    """
+    create stripe checkout session for an order
+    """
 
     permission_classes = [IsAuthenticated]
 
@@ -33,14 +37,14 @@ class PaymentView(APIView):
             order_id = serializer.validated_data["order_id"]
             order = Order.objects.get(id=order_id, user=request.user)
 
-            # Build line items for Stripe
+            # line items for Stripe
             line_items = []
             for item in order.order_items.all():
                 line_items.append(
                     {
                         "price_data": {
                             "currency": "usd",
-                            "unit_amount": int(item.total_price * 100),  # Convert to cents
+                            "unit_amount": int(item.total_price * 100),
                             "product_data": {
                                 "name": item.item.product.name,
                                 "description": f"Quantity: {item.quantity}",
@@ -50,14 +54,13 @@ class PaymentView(APIView):
                     }
                 )
 
-            # Create Stripe checkout session
+            # make stripe checkout session
             checkout_session = stripe.checkout.Session.create(
                 payment_method_types=["card"],
                 line_items=line_items,
                 mode="payment",
-                success_url=request.build_absolute_uri("/api/payment/success/")
-                + f"?session_id={{CHECKOUT_SESSION_ID}}",
-                cancel_url=request.build_absolute_uri("/api/payment/cancel/"),
+                success_url=request.build_absolute_uri("/payment/success/"),
+                cancel_url=request.build_absolute_uri("/payment/cancel/"),
                 metadata={
                     "order_id": str(order.id),
                 },
@@ -70,14 +73,14 @@ class PaymentView(APIView):
                 },
             )
 
-            # Create or update Payment object
+            # create or update Payment object
             payment, created = Payment.objects.update_or_create(
                 order=order,
                 defaults={
                     "user": request.user,
                     "amount": order.total_amount,
                     "status": "pending",
-                    "stripe_payment_intent_id": checkout_session.payment_intent,
+                    "stripe_payment_intent_id": checkout_session.get("payment_intent"),
                 },
             )
 
@@ -106,7 +109,6 @@ class PaymentView(APIView):
 @csrf_exempt
 @require_POST
 def stripe_webhook(request):
-    """Handle Stripe webhook events"""
 
     payload = request.body
     sig_header = request.META.get("HTTP_STRIPE_SIGNATURE")
@@ -115,67 +117,78 @@ def stripe_webhook(request):
         event = stripe.Webhook.construct_event(
             payload, sig_header, settings.STRIPE_WEBHOOK_SECRET
         )
-    except ValueError:
+
+    except ValueError as e:
+        print(f"Invalid payload: {str(e)}")
         return HttpResponse(status=400)
-    except stripe.error.SignatureVerificationError:
+    except stripe.error.SignatureVerificationError as e:
+        print(f"Invalid signature: {str(e)}")
         return HttpResponse(status=400)
 
     try:
-        # Handle checkout.session.completed event
-        if event["type"] == "checkout.session.completed":
+        # payment_intent.created
+        # bug was payment intent 
+        if event["type"] == "payment_intent.created":
+            payment_intent = event["data"]["object"]
+            metadata = payment_intent.get("metadata", {})
+            order_id = metadata.get("order_id")
+            
+            print(f"Payment intent created: {payment_intent['id']}, order: {order_id}")
+            
+            if order_id:
+                try:
+                    order = Order.objects.get(id=order_id)
+                    payment = Payment.objects.get(order=order)
+                    payment.stripe_payment_intent_id = payment_intent["id"]
+                    payment.save()
+                    
+                    print(f"stripe_payment_intent_id inserted in the payment object: {payment_intent['id']}")
+                except Order.DoesNotExist:
+                    print(f"Order not found: {order_id}")
+                except Payment.DoesNotExist:
+                    print(f"Payment not found for order: {order_id}")
+        
+
+        # checkout.session.completed
+        elif event["type"] == "checkout.session.completed":
             session = event["data"]["object"]
-            order_id = session.get("metadata", {}).get("order_id")
+            metadata = session.get("metadata", {})
+            order_id = metadata.get("order_id")
+
+            print("in checkout.session.completed code")
+            print("order_id","payment_intent_id")
+            print(f"Checkout session completed: {session['id']}, order: {order_id}")
 
             if order_id:
-                order = Order.objects.get(id=order_id)
-                payment = Payment.objects.get(order=order)
+                try:
+                    order = Order.objects.get(id=order_id)
+                    order.status = "confirmed"
+                    print(f"Order status updated to {order.status}")
+                    order.save()
 
-                payment.status = "processing"
-                if session.payment_intent:
-                    payment.stripe_payment_intent_id = session.payment_intent
-                payment.save()
+                    payment = Payment.objects.get(order=order)
+                    payment.status = "completed"
+                    print(f"payment status updated to {payment.status}")
+                    payment.save()
 
-                order.status = "processing"
-                order.save()
+                    # need to make cart item's is_paid flag True
+                    order_items = order.order_items.all()
+                    for order_item in order_items:
+                        cart_item = order_item.item
+                        cart_item.is_paid = True
+                        cart_item.save()
+                        print(f"Marked cart item {cart_item.id} as paid")
 
-        # Handle payment_intent.succeeded event
-        elif event["type"] == "payment_intent.succeeded":
-            payment_intent = event["data"]["object"]
+                except Order.DoesNotExist:
+                    print(f"Order not found: {order_id}")
 
-            try:
-                payment = Payment.objects.get(
-                    stripe_payment_intent_id=payment_intent.id
-                )
-                payment.status = "completed"
-                payment.save()
-
-                order = payment.order
-                order.status = "completed"
-                order.save()
-            except Payment.DoesNotExist:
-                pass
-
-        # Handle payment_intent.payment_failed event
-        elif event["type"] == "payment_intent.payment_failed":
-            payment_intent = event["data"]["object"]
-
-            try:
-                payment = Payment.objects.get(
-                    stripe_payment_intent_id=payment_intent.id
-                )
-                payment.status = "failed"
-                payment.save()
-
-                order = payment.order
-                order.status = "failed"
-                order.save()
-            except Payment.DoesNotExist:
-                pass
+        # handles other events
+        else:
+            print(f"Unhandled event type: {event['type']}")
 
     except Exception as e:
         print(f"Webhook error: {str(e)}")
-        return HttpResponse(status=500)
-
+        
     return HttpResponse(status=200)
 
 
@@ -188,7 +201,6 @@ class PaymentSuccessView(APIView):
             {
                 "status": "success",
                 "message": "Payment completed successfully",
-                "session_id": session_id,
             }
         )
 

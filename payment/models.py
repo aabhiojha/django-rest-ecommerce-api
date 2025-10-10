@@ -8,7 +8,6 @@ User = get_user_model()
 class Payment(models.Model):
     PAYMENT_STATUS_CHOICES = [
         ("pending", "Pending"),
-        ("processing", "Processing"),
         ("completed", "Completed"),
         ("failed", "Failed"),
     ]
