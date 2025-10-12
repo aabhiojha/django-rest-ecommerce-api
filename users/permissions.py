@@ -52,7 +52,7 @@ class HasPermission(permissions.BasePermission):
         permission_required = getattr(view, "permission_required", None)
 
         if not permission_required:
-            return True
+            return False
 
         # Check if user has the permission
         return request.user.has_permission(permission_required)

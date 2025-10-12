@@ -11,7 +11,7 @@ class User(AbstractBaseUser):
     )
     first_name = models.CharField(max_length=150, blank=True)
     last_name = models.CharField(max_length=150, blank=True)
-    phone = models.CharField(max_length=15, blank=True, validators=[validate_phone])
+    phone = models.CharField(max_length=15, blank=True)
     date_of_birth = models.DateField(null=True, blank=True)
     is_superuser = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
@@ -271,7 +271,10 @@ class Role(models.Model):
     class Meta:
         verbose_name = "Role"
         verbose_name_plural = "Roles"
-        ordering = [models.Index(fields=["slug"]), models.Index(fields=["is_active"])]
+        # ordering = [
+        #     models.Index(fields=["slug"]), 
+        #     models.Index(fields=["is_active"])
+        #     ]
 
     def __str__(self):
         return self.name
@@ -310,10 +313,10 @@ class UserRole(models.Model):
         verbose_name = "User Role"
         verbose_name_plural = "User Roles"
         unique_together = ["user", "role"]
-        indexes = [
-            models.Index(fields=["user", "is_active"]),
-            models.Index(fields=["role", "is_active"]),
-        ]
+        # indexes = [
+            # models.Index(fields=["user", "is_active"]),
+            # models.Index(fields=["role", "is_active"]),
+        # ]
 
     def __str__(self):
         return f"{self.user.email} - {self.role.name}"

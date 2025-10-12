@@ -7,10 +7,11 @@ from rest_framework_simplejwt.views import (
 
 urlpatterns = [
     # JWT token
-    path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    # User CRUD
-    path("auth/user/list/", views.UserListAPIView.as_view()),
-    path("auth/user/create/", views.UserCreateAPIView.as_view()),
-
+    path("token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
+    path("token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
+    # user specific
+    path("user/create/", views.UserCreateView.as_view(), name="user-create"),
+    # role
+    path("role/create/", views.CreateRoleView.as_view()),
+    path("user/role/assign/", views.UserRoleCreateView.as_view())
 ]
