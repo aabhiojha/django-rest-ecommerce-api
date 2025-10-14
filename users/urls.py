@@ -11,8 +11,11 @@ urlpatterns = [
     path("token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     # user specific
     path("user/create/", views.UserCreateView.as_view(), name="user-create"),
+    path("user/password/change/", views.ChangePasswordView.as_view()),
+    # path("user/password/reset/", views.ResetPasswordView.as_view()),
     # role
     path("role/create/", views.CreateRoleView.as_view()),
     path("user/role/assign/", views.UserRoleCreateView.as_view()),
     path("user/role/list/", views.UserRoleListView.as_view()),
+
 ]

@@ -13,6 +13,7 @@ from .models import (
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 
+
 class UserCreateSerializer(serializers.ModelSerializer):
     password = serializers.CharField(
         write_only=True,
@@ -48,24 +49,71 @@ class UserCreateSerializer(serializers.ModelSerializer):
                 {"password": "The passwords do not match"}
             )
         try:
-            validate_password(attrs['password'])
+            validate_password(attrs["password"])
         except ValidationError as e:
             raise serializers.ValidationError({"password": list(e.messages)})
         return attrs
-        
 
     def create(self, validated_data):
         validated_data.pop("password_confirm")
 
         user = User.objects.create_user(
-            email = validated_data['email'],
-            password = validated_data['password'],
-            first_name = validated_data['first_name'],
-            last_name = validated_data['last_name'],
-            phone = validated_data['phone'],
-            date_of_birth = validated_data["date_of_birth"]
+            email=validated_data["email"],
+            password=validated_data["password"],
+            first_name=validated_data["first_name"],
+            last_name=validated_data["last_name"],
+            phone=validated_data["phone"],
+            date_of_birth=validated_data["date_of_birth"],
         )
         return user
+
+
+
+
+# Password change serializer
+class PasswordChangeSerializer(serializers.ModelSerializer):
+    # email = serializers.CharField()
+    current_password = serializers.CharField(write_only=True, required=True)
+    new_password = serializers.CharField(write_only=True, required=True)
+
+    class Meta:
+        model = User
+        fields = [
+            # "email",
+            "current_password",
+            "new_password",
+        ]
+
+    def validate(self, attrs):
+        request = self.context.get("request")
+
+        print(request)
+
+        user = request.user
+        if user is None:    
+            raise serializers.ValidationError(
+                "Authentication error"
+            )
+
+        current_password = attrs.get("current_password")
+        if not user.check_password(current_password):
+            raise serializers.ValidationError("Current password is incorrect")
+
+        try:
+            validate_password(attrs.get("new_password"),user=user)
+        except ValidationError as e:
+            raise serializers.ValidationError("New password is not very basic. make it strong")
+
+        return attrs
+
+    def save(self, **kwargs):
+        request = self.context.get("request")
+        user = request.user
+        user.set_password(self.validated_data["new_password"])
+        user.save()
+        return user
+
+
 
 
 # Only for listing purpose serializer
@@ -117,4 +165,3 @@ class UserRoleListSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserRole
         fields = "__all__"
-    

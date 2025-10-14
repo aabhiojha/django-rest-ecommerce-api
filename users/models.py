@@ -4,6 +4,7 @@ from django.contrib.auth.models import AbstractBaseUser
 
 from .managers import UserManager
 from .validators import validate_website, validate_phone
+import uuid
 
 class User(AbstractBaseUser):
     email = models.EmailField(
@@ -65,11 +66,10 @@ class User(AbstractBaseUser):
 
         return all(perm in user_permissions for perm in permission_codes)
 
-
-    # error was 
+    # error was
     # AttributeError at /admin/
     # 'User' object has no attribute 'has_module_perms'
-    # inorder to use django admin has_perm and has_module_perms 
+    # inorder to use django admin has_perm and has_module_perms
     # should be implemented
 
     def has_perm(self, perm, obj=None):
@@ -79,6 +79,25 @@ class User(AbstractBaseUser):
 
     def has_perms(self, perm_list, obj=None):
         return self.has_all_permissions(perm_list)
+
+    def has_module_perms(self, app_label):
+        """
+        Return True if the user has any permissions in the given app label.
+        Apparently this is required by Django admin.
+        """
+        if self.is_active and self.is_superuser:
+            return True
+        
+        # For staff users, grant access to admin modules
+        if self.is_active and self.is_staff:
+            return True
+        
+        # Check if user has any permission for this app
+        return self.user_roles.filter(
+            is_active=True,
+            role__is_active=True,
+            role__permissions__is_active=True,
+        ).exists()
 
 
 class UserProfile(models.Model):
@@ -253,7 +272,10 @@ class Role(models.Model):
 
 
 class UserRole(models.Model):
-    """Association between Users and Roles"""
+    """
+    Association between Users and Roles
+    say Linking table between Users and Roles
+    """
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="user_roles")
     role = models.ForeignKey(Role, on_delete=models.CASCADE, related_name="user_roles")
@@ -277,3 +299,14 @@ class UserRole(models.Model):
 
     def __str__(self):
         return f"{self.user.email} - {self.role.name}"
+
+
+class OTP(models.Model):
+    otp = models.CharField(max_length=8, null=True, blank=True)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="otp")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "One Time Password"
+        verbose_name_plural = "One Time Password"
+        unique_together = ["otp", "user"]
