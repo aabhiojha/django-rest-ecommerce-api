@@ -91,3 +91,8 @@ def send_payment_receipt(user, order, payment):
     email = EmailMultiAlternatives(subject, html_content, from_email, recipient_list)
     email.attach_alternative(html_content, "text/html")
     email.send(fail_silently=False)
+
+
+
+# def send_otp(email, send_otp):
+#     create

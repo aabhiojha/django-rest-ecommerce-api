@@ -5,6 +5,7 @@ from django.contrib.auth.models import AbstractBaseUser
 from .managers import UserManager
 from .validators import validate_website, validate_phone
 import uuid
+from django.conf import settings 
 
 class User(AbstractBaseUser):
     email = models.EmailField(
@@ -310,3 +311,4 @@ class OTP(models.Model):
         verbose_name = "One Time Password"
         verbose_name_plural = "One Time Password"
         unique_together = ["otp", "user"]
+        # unique_together = ["otp", "email"]

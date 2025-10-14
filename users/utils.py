@@ -1,5 +1,5 @@
 import uuid
 
-def create_otp(self):
+def generate_otp():
     otp = str(uuid.uuid4()).split("-")[0].upper()
     return otp
