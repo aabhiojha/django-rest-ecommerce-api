@@ -94,5 +94,65 @@ def send_payment_receipt(user, order, payment):
 
 
 
-# def send_otp(email, send_otp):
-#     create
+def send_otp(user, otp):
+    """Send OTP email for password reset with professional HTML formatting"""
+    
+    subject = "Password Reset OTP - E-Commerce"
+    
+    # Plain text version
+    text_content = f"""
+Hi {user.get_full_name() or 'there'},
+
+You requested a password reset for your account.
+
+Your OTP code is: {otp}
+
+This OTP is valid for 5 minutes. If you did not request this password reset, please ignore this email.
+
+Best regards,
+The Team
+    """
+    
+    # HTML version
+    html_content = f"""
+    <html>
+    <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px;">
+            <h2 style="color: #2c3e50; margin-top: 0;">Password Reset Request</h2>
+            
+            <p>Hi {user.get_full_name() or 'there'},</p>
+            
+            <p>You requested a password reset for your account associated with <strong>{user.email}</strong>.</p>
+            
+            <div style="background-color: #fff; padding: 20px; margin: 20px 0; border-radius: 8px; text-align: center; border: 2px solid #e9ecef;">
+                <p style="margin: 0 0 10px 0; font-size: 14px; color: #6c757d;">Your OTP Code:</p>
+                <h1 style="margin: 0; font-size: 36px; color: #007bff; letter-spacing: 8px; font-weight: bold;">{otp}</h1>
+            </div>
+            
+            <div style="background-color: #fff3cd; padding: 15px; border-radius: 8px; border-left: 4px solid #ffc107;">
+                <p style="margin: 0; font-size: 14px; color: #856404;">
+                    <strong>⚠️ Important:</strong> This OTP is valid for 10 minutes only. Do not share this code with anyone.
+                </p>
+            </div>
+            
+            <p style="margin-top: 20px; font-size: 14px; color: #6c757d;">
+                If you did not request this password reset, please ignore this email and your password will remain unchanged.
+            </p>
+            
+            <hr style="border: none; border-top: 1px solid #e9ecef; margin: 20px 0;">
+            
+            <p style="font-size: 12px; color: #6c757d; margin-bottom: 0;">
+                Best regards,<br>
+                The Team
+            </p>
+        </div>
+    </body>
+    </html>
+    """
+    
+    from_email = settings.DEFAULT_FROM_EMAIL
+    recipient_list = [user.email]
+    
+    email = EmailMultiAlternatives(subject, text_content, from_email, recipient_list)
+    email.attach_alternative(html_content, "text/html")
+    email.send(fail_silently=False)

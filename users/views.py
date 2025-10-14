@@ -12,18 +12,13 @@ from .serializers import (
 from rest_framework.permissions import IsAuthenticated
 from .permissions import HasPermission
 
-# from django.core.mail import send_mail
 from core.email import welcome_mail
 
 from .models import Role, User, OTP
 from .serializers import UserSerializer, UserCreateSerializer, UserRoleListSerializer
 
 from .utils import generate_otp
-
-
-# class UserCreateView(generics.CreateAPIView):
-#     serializer_class = UserCreateSerializer
-#     queryset = User.objects.all()
+from core.email import send_otp
 
 
 class UserCreateView(APIView):
@@ -72,6 +67,9 @@ class ResetPasswordView(APIView):
             user = User.objects.get(email=email)
 
             otp_code = generate_otp()
+            
+            # function to send mail to the email address
+            send_otp(user, otp_code)
 
             print(otp_code)
 
@@ -97,7 +95,7 @@ class ResetPasswordConfirmView(APIView):
 
             user = User.objects.get(email=email)
             # print(user)
-
+            
             opt_record = OTP.objects.filter(
                 user=user, 
                 otp=user_otp
