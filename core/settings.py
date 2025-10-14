@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+from decouple import config
+from datetime import timedelta
 
 from dotenv import load_dotenv
 import os
@@ -169,6 +171,15 @@ REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=3),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    "ROTATE_REFRESH_TOKENS": False,
+    "BLACKLIST_AFTER_ROTATION": True,
+    "ALGORITHM": "HS256",
+    "SIGNING_KEY": SECRET_KEY,
+    "AUTH_HEADER_TYPES": ("Bearer",),
+}
 
 SPECTACULAR_SETTINGS = {
     "TITLE": "ecommerce API",
@@ -178,6 +189,21 @@ SPECTACULAR_SETTINGS = {
 }
 
 
-STRIPE_PUBLISHABLE_KEY = os.getenv("STRIPE_PUBLISHABLE_KEY")
-STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
-STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET", "")
+# STRIPE_PUBLISHABLE_KEY = os.getenv("STRIPE_PUBLISHABLE_KEY")
+# STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
+# STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET")
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# EMAIL_BACKEND=config("EMAIL_BACKEND")
+EMAIL_HOST=config("EMAIL_HOST")
+EMAIL_PORT=config("EMAIL_PORT")
+EMAIL_USE_TLS=config("EMAIL_USE_TLS")
+EMAIL_HOST_USER=config("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD=config("EMAIL_HOST_PASSWORD")
+DEFAULT_FROM_EMAIL=config("DEFAULT_FROM_EMAIL")
+
+STRIPE_PUBLISHABLE_KEY= config("STRIPE_PUBLISHABLE_KEY")
+STRIPE_SECRET_KEY=config("STRIPE_SECRET_KEY")
+STRIPE_WEBHOOK_SECRET=config("STRIPE_WEBHOOK_SECRET")

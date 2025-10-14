@@ -10,7 +10,7 @@ from .permissions import HasPermission
 from core.email import welcome_mail
 
 from .models import Role, User
-from .serializers import UserSerializer, UserCreateSerializer
+from .serializers import UserSerializer, UserCreateSerializer,UserRoleListSerializer
 
 
 # class UserCreateView(generics.CreateAPIView):
@@ -19,6 +19,7 @@ from .serializers import UserSerializer, UserCreateSerializer
 
 
 class UserCreateView(APIView):
+    serializer_class=UserCreateSerializer
     def post(self, request):
         serializer = UserCreateSerializer(data=request.data)
         if serializer.is_valid():
@@ -57,3 +58,12 @@ class UserRoleCreateView(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class UserRoleListView(APIView):
+    serializer_class = UserRoleListSerializer
+    def get(self, request):
+        serializer = UserRoleListSerializer()
+        print(serializer)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+        

@@ -15,6 +15,8 @@ from orders.models import Order, OrderItems
 from payment.models import Payment
 from payment.serializers import PaymentSerializer, PaymentCreateSerializer
 
+from core.email import send_payment_receipt 
+
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
 
@@ -127,27 +129,27 @@ def stripe_webhook(request):
 
     try:
         # payment_intent.created
-        # bug was payment intent 
+        # bug was payment intent
         if event["type"] == "payment_intent.created":
             payment_intent = event["data"]["object"]
             metadata = payment_intent.get("metadata", {})
             order_id = metadata.get("order_id")
-            
-            print(f"Payment intent created: {payment_intent['id']}, order: {order_id}")
-            
             if order_id:
                 try:
                     order = Order.objects.get(id=order_id)
                     payment = Payment.objects.get(order=order)
                     payment.stripe_payment_intent_id = payment_intent["id"]
                     payment.save()
-                    
-                    print(f"stripe_payment_intent_id inserted in the payment object: {payment_intent['id']}")
+
                 except Order.DoesNotExist:
                     print(f"Order not found: {order_id}")
                 except Payment.DoesNotExist:
                     print(f"Payment not found for order: {order_id}")
-        
+
+        if event["type"] == "invoice.payment_succeeded":
+            invoice = event["data"]["object"]
+            pdf_url = invoice["invoice_pdf"]
+            print(pdf_url)
 
         # checkout.session.completed
         elif event["type"] == "checkout.session.completed":
@@ -155,20 +157,14 @@ def stripe_webhook(request):
             metadata = session.get("metadata", {})
             order_id = metadata.get("order_id")
 
-            print("in checkout.session.completed code")
-            print("order_id","payment_intent_id")
-            print(f"Checkout session completed: {session['id']}, order: {order_id}")
-
             if order_id:
                 try:
                     order = Order.objects.get(id=order_id)
                     order.status = "confirmed"
-                    print(f"Order status updated to {order.status}")
                     order.save()
 
                     payment = Payment.objects.get(order=order)
                     payment.status = "completed"
-                    print(f"payment status updated to {payment.status}")
                     payment.save()
 
                     # need to make cart item's is_paid flag True
@@ -177,7 +173,17 @@ def stripe_webhook(request):
                         cart_item = order_item.item
                         cart_item.is_paid = True
                         cart_item.save()
-                        print(f"Marked cart item {cart_item.id} as paid")
+
+                    # send email to customer
+                    send_payment_receipt(order.user, order, payment)
+
+                    # send_mail(
+                    #     "Payment Successfull!",
+                    #     "Shop again.",
+                    #     "aojha6822@gmail.com",  # From
+                    #     ["aabhiojha08@outlook.com"],  # To
+                    #     fail_silently=False,
+                    # )
 
                 except Order.DoesNotExist:
                     print(f"Order not found: {order_id}")
@@ -188,15 +194,13 @@ def stripe_webhook(request):
 
     except Exception as e:
         print(f"Webhook error: {str(e)}")
-        
+
     return HttpResponse(status=200)
 
 
 class PaymentSuccessView(APIView):
     """Payment success callback"""
-
     def get(self, request):
-        session_id = request.GET.get("session_id")
         return Response(
             {
                 "status": "success",

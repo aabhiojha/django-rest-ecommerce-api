@@ -12,7 +12,6 @@ from products.models import Product, ProductVarient
 
 class Cart(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    is_paid = models.BooleanField(default=False)
 
     @property
     def item_count(self):
@@ -48,7 +47,7 @@ class CartItem(models.Model):
         blank=True,
     )
     quantity = models.PositiveIntegerField(default=1)
-    purchased = models.BooleanField(default=False)
+    is_paid = models.BooleanField(default=False)
 
     # @property
     # def in_stock(self):

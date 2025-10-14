@@ -29,10 +29,6 @@ class User(AbstractBaseUser):
         verbose_name = "User"
         verbose_name_plural = "Users"
         ordering = ["-date_joined"]
-        indexes = [
-            models.Index(fields=["email"]),
-            models.Index(fields=["is_active", "is_staff"]),
-        ]
 
     def __str__(self):
         return self.email
@@ -77,41 +73,12 @@ class User(AbstractBaseUser):
     # should be implemented
 
     def has_perm(self, perm, obj=None):
-        """
-        Return True if the user has the specified permission.
-        """
         if self.is_active and self.is_superuser:
             return True
         return self.has_permission(perm)
 
     def has_perms(self, perm_list, obj=None):
-        """
-        Return True if the user has each of the specified permissions.
-        """
         return self.has_all_permissions(perm_list)
-
-    def has_module_perms(self, app_label):
-        """
-        Return True if the user has any permissions in the given app label.
-        Required by Django admin.
-        """
-        if self.is_active and self.is_superuser:
-            return True
-        
-        # For staff users, grant access to admin modules
-        if self.is_active and self.is_staff:
-            return True
-        
-        # Check if user has any permission for this app
-        return self.user_roles.filter(
-            is_active=True,
-            role__is_active=True,
-            role__permissions__is_active=True,
-        ).exists()
-
-    # def get_all_permissions(self):
-    #     if self.is_superuser:
-    #         return Permission.objects.filter(is_active=True)
 
 
 class UserProfile(models.Model):
@@ -186,7 +153,7 @@ class Address(models.Model):
         return f"{self.full_name} - {self.address_type} ({self.city})"
 
     def save(self, *args, **kwargs):
-        # Ensure only one default address per user
+        # we need to make sure that only one default address per user.
         if self.is_default:
             Address.objects.filter(user=self.user, is_default=True).exclude(
                 pk=self.pk
@@ -195,8 +162,6 @@ class Address(models.Model):
 
 
 # Rabc models
-
-
 class PermissionCategory(models.Model):
     """Permissions collection for frontend purpose"""
 
@@ -271,10 +236,6 @@ class Role(models.Model):
     class Meta:
         verbose_name = "Role"
         verbose_name_plural = "Roles"
-        # ordering = [
-        #     models.Index(fields=["slug"]), 
-        #     models.Index(fields=["is_active"])
-        #     ]
 
     def __str__(self):
         return self.name
@@ -313,10 +274,6 @@ class UserRole(models.Model):
         verbose_name = "User Role"
         verbose_name_plural = "User Roles"
         unique_together = ["user", "role"]
-        # indexes = [
-            # models.Index(fields=["user", "is_active"]),
-            # models.Index(fields=["role", "is_active"]),
-        # ]
 
     def __str__(self):
         return f"{self.user.email} - {self.role.name}"
