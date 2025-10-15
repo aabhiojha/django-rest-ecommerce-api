@@ -56,30 +56,38 @@ class ResetPasswordView(APIView):
     serializer_class = PasswordResetSerializer
 
     def post(self, request):
-        serializer = PasswordResetSerializer(
-            data=request.data, context={"request": request}
-        )
+        serializer = PasswordResetSerializer(data=request.data)
         if serializer.is_valid():
-            # send an otp to the user i.e. to the email mentioned by the request
-            # print(serializer.validated_data.get("email"))
-
             email = serializer.validated_data.get("email")
-            user = User.objects.get(email=email)
-
-            otp_code = generate_otp()
             
-            # function to send mail to the email address
-            send_otp(user, otp_code)
+            try:
+                user = User.objects.get(email=email)
+                
 
-            print(otp_code)
+                otp_code = generate_otp(user)
+                
+                # Send OTP via email
+                send_otp(user, otp_code)
 
-            OTP.objects.create(user=user, otp=otp_code)
-
-            return Response(serializer.data, status=status.HTTP_200_OK)
+                return Response(
+                    {"detail": "Password reset OTP has been sent to your email."},
+                    status=status.HTTP_200_OK
+                )
+            
+            except User.DoesNotExist:
+                return Response(
+                    {"detail": "The user associated with this email does not exist."},
+                    status=status.HTTP_200_OK
+                )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class ResetPasswordConfirmView(APIView):
+    """
+    check if otp exists and reset the password
+    requires - email, otp and new password
+    """
+
     serializer_class = PasswordResetConfirmSerializer
 
     def post(self, request):
@@ -87,27 +95,58 @@ class ResetPasswordConfirmView(APIView):
 
         if serializer.is_valid():
             email = serializer.validated_data.get("email")
-            # print(email)
-            user_otp = serializer.validated_data.get("user_otp")
-            # print(user_otp)
+            user_otp = serializer.validated_data.get("otp")
             new_password = serializer.validated_data.get("new_password")
-            # print(new_password)
 
-            user = User.objects.get(email=email)
-            # print(user)
-            
-            opt_record = OTP.objects.filter(
-                user=user, 
-                otp=user_otp
-                ).exists()
-            # print(opt_record)
+            try:
+                user = User.objects.get(email=email)
+                
+                # possibilities
+                # - the otp for this email does not exist
+                # - user enters the otp after it has expired
+                # - user tries to use the same otp to reset the password after 
+                #      resetting the password for the first time
 
-            if opt_record:
-                user.set_password(new_password)
-                user.save()
-                return Response({"message":"Password reset successful"}, status=status.HTTP_200_OK)
+                # Get the OTP record
+                otp_record = OTP.objects.filter(
+                    user=user,
+                    otp=user_otp,
+                    is_active=True,
+                    is_used=False
+                ).first()
+                
+                # Need to check if the otp is valid and exists
+                if otp_record and otp_record.is_valid():
+                    user.set_password(new_password)
+                    user.save()
+                    
+                    # Mark OTP as used and inactive
+                    otp_record.is_used = True
+                    otp_record.is_active = False
+                    otp_record.save()
+                    
+                    return Response(
+                        {"detail": "Password reset successful."},
+                        status=status.HTTP_200_OK
+                    )
+                elif otp_record and otp_record.is_expired:
+                    return Response(
+                        {"error": "OTP has expired. Please request a new one."},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                else:
+                    return Response(
+                        {"error": "Invalid or already used OTP."},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                    
+            except User.DoesNotExist:
+                return Response(
+                    {"error": "User not found."},
+                    status=status.HTTP_404_NOT_FOUND
+                )
         
-        return Response({"message":"Invalid or expired OTP"}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 # role ko lagi view chaiyo

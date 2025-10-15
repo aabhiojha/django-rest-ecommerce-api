@@ -125,10 +125,11 @@ class PasswordResetSerializer(serializers.Serializer):
             raise serializers.ValidationError("No user found with the email address.")
         return value
 
+
 # Password reset confirm serializer
 class PasswordResetConfirmSerializer(serializers.Serializer):
     email = serializers.EmailField(write_only=True, required=True)
-    user_otp = serializers.CharField(write_only=True, required=True, max_length=8)
+    otp = serializers.CharField(write_only=True, required=True, max_length=7)
     new_password = serializers.CharField(write_only=True, required=True)
 
     def validate_email(self, value):
@@ -142,7 +143,11 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
         except ValidationError as e:
             raise serializers.ValidationError(list(e.messages))
         return value
-        
+    
+    def validate(self, attrs):
+        if OTP.is_expired():
+            raise serializers.ValidationError("This OTP has expired.")
+        return attrs
 
 
 # Only for listing purpose serializer

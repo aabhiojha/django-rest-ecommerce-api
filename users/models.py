@@ -1,3 +1,4 @@
+from datetime import timedelta
 from django.utils import timezone
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser
@@ -303,12 +304,28 @@ class UserRole(models.Model):
 
 
 class OTP(models.Model):
-    otp = models.CharField(max_length=8, null=True, blank=True)
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="otp")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="otps")
+    otp = models.CharField(max_length=7)
+    is_used = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
 
     class Meta:
         verbose_name = "One Time Password"
-        verbose_name_plural = "One Time Password"
-        unique_together = ["otp", "user"]
-        # unique_together = ["otp", "email"]
+        verbose_name_plural = "One Time Passwords"
+        ordering = ["-created_at"]
+
+    @property
+    def is_expired(self):
+        return timezone.now() > self.expires_at
+    
+    def is_valid(self):
+        """
+        Check if OTP is valid i.e. it shoud be 
+        active, 
+        not used and
+        not expired
+        """
+        return self.is_active and not self.is_used and not self.is_expired
+    
