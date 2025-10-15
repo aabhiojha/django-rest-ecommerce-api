@@ -37,7 +37,7 @@ class User(AbstractBaseUser):
         return self.email
 
     def get_full_name(self):
-        return f"{self.first_name} {self.last_name}".strip() or self.email
+        return f"{self.first_name} {self.last_name}"
 
     def get_short_name(self):
         return f"{self.first_name}" or self.email.split("@")[0]
@@ -305,8 +305,7 @@ class UserRole(models.Model):
 
 class OTP(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="otps")
-    otp = models.CharField(max_length=7)
-    is_used = models.BooleanField(default=False)
+    otp = models.CharField(max_length=6)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     expires_at = models.DateTimeField()
@@ -318,14 +317,4 @@ class OTP(models.Model):
 
     @property
     def is_expired(self):
-        return timezone.now() > self.expires_at
-    
-    def is_valid(self):
-        """
-        Check if OTP is valid i.e. it shoud be 
-        active, 
-        not used and
-        not expired
-        """
-        return self.is_active and not self.is_used and not self.is_expired
-    
+        return timezone.now() > self.expires_at    

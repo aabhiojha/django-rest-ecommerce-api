@@ -20,4 +20,4 @@ class HasPermission(permissions.BasePermission):
 
         # Check if user has the permission
         return request.user.has_permission(permission_required)
-
+    

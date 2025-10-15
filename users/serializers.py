@@ -15,6 +15,7 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404
 
+
 class UserCreateSerializer(serializers.ModelSerializer):
     password = serializers.CharField(
         write_only=True,
@@ -69,8 +70,6 @@ class UserCreateSerializer(serializers.ModelSerializer):
         return user
 
 
-
-
 # Password change serializer
 class PasswordChangeSerializer(serializers.ModelSerializer):
     # email = serializers.CharField()
@@ -91,19 +90,19 @@ class PasswordChangeSerializer(serializers.ModelSerializer):
         print(request)
 
         user = request.user
-        if user is None:    
-            raise serializers.ValidationError(
-                "Authentication error"
-            )
+        if user is None:
+            raise serializers.ValidationError("Authentication error")
 
         current_password = attrs.get("current_password")
         if not user.check_password(current_password):
             raise serializers.ValidationError("Current password is incorrect")
 
         try:
-            validate_password(attrs.get("new_password"),user=user)
+            validate_password(attrs.get("new_password"), user=user)
         except ValidationError as e:
-            raise serializers.ValidationError("New password is not very basic. make it strong")
+            raise serializers.ValidationError(
+                "New password is not very basic. make it strong"
+            )
 
         return attrs
 
@@ -113,7 +112,6 @@ class PasswordChangeSerializer(serializers.ModelSerializer):
         user.set_password(self.validated_data["new_password"])
         user.save()
         return user
-
 
 
 # Password reset serializer
@@ -129,49 +127,32 @@ class PasswordResetSerializer(serializers.Serializer):
 # Password reset confirm serializer
 class PasswordResetConfirmSerializer(serializers.Serializer):
     email = serializers.EmailField(write_only=True, required=True)
-    otp = serializers.CharField(write_only=True, required=True, max_length=7)
+    otp = serializers.CharField(
+        write_only=True, required=True, max_length=6, min_length=6
+    )
     new_password = serializers.CharField(write_only=True, required=True)
 
     def validate_email(self, value):
         if not User.objects.filter(email=value).exists():
             raise serializers.ValidationError("No user found with this email address.")
         return value
-    
+
     def validate_new_password(self, value):
         try:
             validate_password(value)
         except ValidationError as e:
             raise serializers.ValidationError(list(e.messages))
         return value
-    
+
     def validate(self, attrs):
-        if OTP.is_expired():
+        # get user object
+        user = User.objects.filter(email=attrs["email"]).first()
+        # get the otp object
+        otp_obj = OTP.objects.filter(user=user, otp=attrs["otp"]).first()
+
+        if otp_obj.is_expired:
             raise serializers.ValidationError("This OTP has expired.")
         return attrs
-
-
-# Only for listing purpose serializer
-class UserSerializer(serializers.ModelSerializer):
-    """Basic user serializer for read operation"""
-
-    full_name = serializers.CharField(source="get_full_name", read_only=True)
-
-    class Meta:
-        model = User
-        fields = [
-            "id",
-            "email",
-            "first_name",
-            "last_name",
-            "full_name",
-            "phone",
-            "date_of_birth",
-            "is_active",
-            "is_staff",
-            "date_joined",
-            "last_login",
-        ]
-        read_only_fields = ["id", "date_joined", "last_login", "is_active", "is_staff"]
 
 
 class RoleCreateSerializer(serializers.ModelSerializer):
@@ -189,6 +170,30 @@ class RoleCreateSerializer(serializers.ModelSerializer):
         ]
 
 
+class PermissionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Permission
+        fields = ["name"]
+
+
+class RoleListSerializer(serializers.ModelSerializer):
+    permissions = PermissionSerializer()
+    permission_required = "can_manage_roles"
+    
+    class Meta:
+        model = Role
+        # fields = ""
+        fields = [
+            "name",
+            "slug",
+            "description",
+            "permissions",
+            "is_active",
+            "is_system_role",
+            "created_at",
+            "updated_at",
+        ]
+
 class UserRoleCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserRole
@@ -196,6 +201,49 @@ class UserRoleCreateSerializer(serializers.ModelSerializer):
 
 
 class UserRoleListSerializer(serializers.ModelSerializer):
+    # permission = PermissionSerializer()
+    role = RoleListSerializer()
+    permission_required = "can_manage_roles"
+
+    class Meta:
+        model = UserRole
+        fields = [
+            "user",
+            # "role",
+            "role",
+            "assigned_by",
+        ]
+
+
+# Only for listing purpose serializer
+class UserSerializer(serializers.ModelSerializer):
+    """Basic user serializer for read operation"""
+
+    # role = UserRoleListSerializer()
+    # full_name = serializers.CharField(source="get_full_name", read_only=True)
+
     class Meta:
         model = UserRole
         fields = "__all__"
+        # fields = [
+        #     "id",
+        #     "email",
+        #     "first_name",
+        #     "last_name",
+        #     "full_name",
+        #     "phone",
+        #     "date_of_birth",
+        #     "role",
+        #     "is_active",
+        #     "is_staff",
+        #     "date_joined",
+        #     "last_login",
+        # ]
+        # read_only_fields = [
+        #     "id",
+        #     "date_joined",
+        #     "last_login",
+        #     "is_active",
+        #     "is_staff",
+        #     # "role",
+        # ]

@@ -7,19 +7,21 @@ from users.models import OTP
 
 
 def generate_otp(user):
-    otp = str(uuid.uuid4()).split("-")[0].upper()
+    # Generate 6-digit numeric OTP
+    otp = str(random.randint(100000, 999999))
 
-    # we need to make the existing active otp inactive
-    # it is needed when user requests for another code in betweeen the expiry time
-    OTP.objects.filter(user=user, is_active=True).update(is_active=False)
+    otps = OTP.objects.all()
+    print(otps)
 
+    # Calculate expiry time
     timeout_minutes = settings.PASSWORD_RESET_TIMEOUT
-    expires_at = timezone.now() + timedelta(minutes=timeout_minutes)
+    expires_at = timezone.now() + timedelta(minutes=int(timeout_minutes))
     
     # Create new OTP record
     OTP.objects.create(
         user=user,
         otp=otp,
+        is_active=True,
         expires_at=expires_at
     )
     

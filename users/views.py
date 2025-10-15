@@ -7,6 +7,7 @@ from .serializers import (
     PasswordResetConfirmSerializer,
     PasswordResetSerializer,
     RoleCreateSerializer,
+    RoleListSerializer,
     UserRoleCreateSerializer,
 )
 from rest_framework.permissions import IsAuthenticated
@@ -14,7 +15,7 @@ from .permissions import HasPermission
 
 from core.email import welcome_mail
 
-from .models import Role, User, OTP
+from .models import Role, User, OTP, UserRole
 from .serializers import UserSerializer, UserCreateSerializer, UserRoleListSerializer
 
 from .utils import generate_otp
@@ -101,7 +102,7 @@ class ResetPasswordConfirmView(APIView):
             try:
                 user = User.objects.get(email=email)
                 
-                # possibilities
+                # TODO possibilities
                 # - the otp for this email does not exist
                 # - user enters the otp after it has expired
                 # - user tries to use the same otp to reset the password after 
@@ -112,32 +113,19 @@ class ResetPasswordConfirmView(APIView):
                     user=user,
                     otp=user_otp,
                     is_active=True,
-                    is_used=False
                 ).first()
                 
-                # Need to check if the otp is valid and exists
-                if otp_record and otp_record.is_valid():
+                # Need to check if the otp is valid and not expired
+                if otp_record and not otp_record.is_expired:
                     user.set_password(new_password)
                     user.save()
                     
-                    # Mark OTP as used and inactive
-                    otp_record.is_used = True
-                    otp_record.is_active = False
-                    otp_record.save()
-                    
+                    # delete the otp after password reset is complete
+                    otp_record.delete()
+
                     return Response(
                         {"detail": "Password reset successful."},
                         status=status.HTTP_200_OK
-                    )
-                elif otp_record and otp_record.is_expired:
-                    return Response(
-                        {"error": "OTP has expired. Please request a new one."},
-                        status=status.HTTP_400_BAD_REQUEST
-                    )
-                else:
-                    return Response(
-                        {"error": "Invalid or already used OTP."},
-                        status=status.HTTP_400_BAD_REQUEST
                     )
                     
             except User.DoesNotExist:
@@ -181,6 +169,14 @@ class UserRoleListView(APIView):
     serializer_class = UserRoleListSerializer
 
     def get(self, request):
-        serializer = UserRoleListSerializer()
-        print(serializer)
+        user_roles = UserRole.objects.all()
+        serializer = UserRoleListSerializer(user_roles, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+class ListRolesView(APIView):
+    serializer_class = RoleListSerializer
+
+    def get(self, request):
+        roles = Role.objects.all()
+        serializer = RoleListSerializer(roles, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
