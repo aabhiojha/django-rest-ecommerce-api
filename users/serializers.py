@@ -150,6 +150,9 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
         # get the otp object
         otp_obj = OTP.objects.filter(user=user, otp=attrs["otp"]).first()
 
+        if not otp_obj:
+            raise serializers.ValidationError("The opt is invalid.")
+        
         if otp_obj.is_expired:
             raise serializers.ValidationError("This OTP has expired.")
         return attrs
@@ -171,15 +174,18 @@ class RoleCreateSerializer(serializers.ModelSerializer):
 
 
 class PermissionSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = Permission
         fields = ["name"]
 
 
 class RoleListSerializer(serializers.ModelSerializer):
-    permissions = PermissionSerializer()
-    permission_required = "can_manage_roles"
-    
+    # permissions = PermissionSerializer()
+    # permission_required = "can_manage_roles"
+
+    permissions = serializers.SerializerMethodField()
+
     class Meta:
         model = Role
         # fields = ""
@@ -194,6 +200,10 @@ class RoleListSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
 
+    def get_permissions(self, obj):
+        return obj.permissions.filter(is_active=True).values_list("name", flat=True)
+
+
 class UserRoleCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserRole
@@ -203,13 +213,12 @@ class UserRoleCreateSerializer(serializers.ModelSerializer):
 class UserRoleListSerializer(serializers.ModelSerializer):
     # permission = PermissionSerializer()
     role = RoleListSerializer()
-    permission_required = "can_manage_roles"
+    # permission_required = "can_manage_roles"
 
     class Meta:
         model = UserRole
         fields = [
             "user",
-            # "role",
             "role",
             "assigned_by",
         ]
@@ -247,3 +256,9 @@ class UserSerializer(serializers.ModelSerializer):
         #     "is_staff",
         #     # "role",
         # ]
+
+
+class UserDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserProfile
+        fields = "__all__"
