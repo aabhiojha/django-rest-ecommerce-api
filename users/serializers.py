@@ -228,34 +228,9 @@ class UserRoleListSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     """Basic user serializer for read operation"""
 
-    # role = UserRoleListSerializer()
-    # full_name = serializers.CharField(source="get_full_name", read_only=True)
-
     class Meta:
         model = UserRole
         fields = "__all__"
-        # fields = [
-        #     "id",
-        #     "email",
-        #     "first_name",
-        #     "last_name",
-        #     "full_name",
-        #     "phone",
-        #     "date_of_birth",
-        #     "role",
-        #     "is_active",
-        #     "is_staff",
-        #     "date_joined",
-        #     "last_login",
-        # ]
-        # read_only_fields = [
-        #     "id",
-        #     "date_joined",
-        #     "last_login",
-        #     "is_active",
-        #     "is_staff",
-        #     # "role",
-        # ]
 
 
 class UserDetailSerializer(serializers.ModelSerializer):
