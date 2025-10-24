@@ -18,7 +18,7 @@ urlpatterns = [
     path("user/password/reset/confirm/", views.ResetPasswordConfirmView.as_view()),
     path("user/users/", user_views.ListUsersView.as_view()),
     path("user/<int:pk>/", user_views.UserUpdateView.as_view()),
-    path("user/<int:pk>",user_views.UserProfileDetailView.as_view()),
+    path("user/<int:pk>/",user_views.UserProfileDetailView.as_view()),
     # role
     path("roles/list/", views.ListRolesView.as_view()),
     path("role/create/", views.CreateRoleView.as_view()),

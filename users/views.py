@@ -23,6 +23,9 @@ from core.email import send_otp
 
 
 class UserCreateView(APIView):
+    '''
+    Create User
+    '''
     serializer_class = UserCreateSerializer
 
     def post(self, request):

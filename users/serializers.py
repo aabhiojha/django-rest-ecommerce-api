@@ -229,7 +229,7 @@ class UserSerializer(serializers.ModelSerializer):
     """Basic user serializer for read operation"""
 
     class Meta:
-        model = UserRole
+        model = User
         fields = "__all__"
 
 
