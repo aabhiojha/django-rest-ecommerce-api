@@ -22,18 +22,12 @@ class UserCreateSerializer(serializers.ModelSerializer):
         required=True,
         # style={"input_type": "password"}
     )
-    password_confirm = serializers.CharField(
-        write_only=True,
-        required=True,
-        # style={"input_type": "password"}
-    )
 
     class Meta:
         model = User
         fields = [
             "email",
             "password",
-            "password_confirm",
             "first_name",
             "last_name",
             "phone",
@@ -46,10 +40,6 @@ class UserCreateSerializer(serializers.ModelSerializer):
         return value
 
     def validate(self, attrs):
-        if attrs["password"] != attrs["password_confirm"]:
-            raise serializers.ValidationError(
-                {"password": "The passwords do not match"}
-            )
         try:
             validate_password(attrs["password"])
         except ValidationError as e:
@@ -57,7 +47,6 @@ class UserCreateSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
-        validated_data.pop("password_confirm")
 
         user = User.objects.create_user(
             email=validated_data["email"],
@@ -152,7 +141,7 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
 
         if not otp_obj:
             raise serializers.ValidationError("The opt is invalid.")
-        
+
         if otp_obj.is_expired:
             raise serializers.ValidationError("This OTP has expired.")
         return attrs
@@ -233,7 +222,65 @@ class UserSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class UserDetailSerializer(serializers.ModelSerializer):
+class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserProfile
-        fields = "__all__"
+        fields = [
+            "user",
+            "avatar",
+            "bio",
+            "gender",
+            "location",
+            "website",
+        ]
+
+
+class UserDetailSerializer(serializers.ModelSerializer):
+
+    # user_profile = serializers.SerializerMethodField()
+    user_profile = UserProfileSerializer(
+        source="profile", required=False, allow_null=True
+    )
+
+    class Meta:
+        model = User
+        fields = [
+            "id",
+            "email",
+            "first_name",
+            "last_name",
+            "phone",
+            "date_of_birth",
+            "is_superuser",
+            "is_active",
+            "is_staff",
+            "date_joined",
+            "last_login",
+            "updated_at",
+            "user_profile",
+        ]
+
+        read_only_fields = [
+            "id",
+            "email",
+            "is_superuser",
+            "is_active",
+            "is_staff",
+            "date_joined",
+            "last_login",
+            "updated_at",
+        ]
+
+    def update(self, instance, validated_data):
+        profile_data = validated_data.pop("user_profile")
+        print(instance)
+
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+
+        if profile_data is not None:
+            UserProfile.objects.update_or_create(user=instance, defaults=profile_data)
+
+        instance.refresh_from_db()
+        return instance

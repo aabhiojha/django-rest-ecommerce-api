@@ -35,41 +35,34 @@ class ListUsersView(generics.ListAPIView):
     serializer_class = UserSerializer
 
 
-class UserUpdateView(APIView):
-    serializer_class = UserSerializer
+class UserProfileDetailView(APIView):
+    serializer_class = UserDetailSerializer
     permission_classes = [IsAuthenticated]
     # lookup_field = "pk"
 
-    def put(self, request, *args, **kwargs):
-        serializer = UserSerializer(request.user, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def get(self, request, pk):
+        user = User.objects.get(pk=pk)
+        print(user)
+        serializer = UserDetailSerializer(user)
+        print(serializer.data)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+# class UserProfileDetailView(generics.RetrieveUpdateDestroyAPIView):
+#     serializer_class = UserDetailSerializer
+#     queryset = User.objects.all()
+
+
+class CurrentUserView(APIView):
+    serializer_class = UserDetailSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        serializer = UserDetailSerializer(request.user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     def patch(self, request):
-        serializer = UserSerializer(request.user, data=request.data)
+        serializer = UserDetailSerializer(request.user, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-# class UserProfileDetailView(APIView):
-#     serializer_class = UserDetailSerializer
-#     # permission_classes = [IsAuthenticated]
-#     # lookup_field = "pk"
-
-#     def get(self, request, pk):
-#         if request.user.id == pk:
-#             user = User.objects.get(pk=pk)
-#             serializer = UserDetailSerializer(request.user)
-#             return Response(serializer.data, status=status.HTTP_200_OK)
-#         return Response(
-#             {"error": "You don't have permission to view this user."},
-#             status=status.HTTP_403_FORBIDDEN,
-#         )
-
-class UserProfileDetailView(generics.ListAPIView):
-    serializer_class = UserDetailSerializer
-    queryset = UserProfile.objects.all()

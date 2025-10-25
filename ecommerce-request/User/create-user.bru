@@ -1,0 +1,23 @@
+meta {
+  name: create-user
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://127.0.0.1:8000/user/create/
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "email":"aabhiojha98@gmail.com",
+    "password":"YoPasswordHo@123"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
