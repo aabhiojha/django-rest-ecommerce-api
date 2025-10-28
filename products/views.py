@@ -1,4 +1,7 @@
 from rest_framework import generics
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
 
 # from rest_framework import filters
 # from django_filters.rest_framework import DjangoFilterBackend
@@ -10,6 +13,7 @@ from .serializers import (
     ProductListSerializer,
     ProductDetailSerializer,
     ProductUpdateSerializer,
+    CategoryProductListSerializer
 )
 
 from .models import Category, ProductVarient, ProductImage, Product
@@ -55,7 +59,26 @@ class ProductUpdateAPIView(generics.UpdateAPIView):
 
 class ProductDetailAPIView(generics.RetrieveAPIView):
     queryset = Product.objects.select_related("category").prefetch_related(
-        "images", "varients", "attributes"
+        "images", "varients"
     )
+    # queryset = Product.objects.all()
     lookup_field = "pk"
     serializer_class = ProductDetailSerializer
+
+
+class ProductFeaturedAPIView(generics.ListAPIView):
+    queryset = Product.objects.filter(is_featured=True)
+    serializer_class = ProductListSerializer
+    pagination_class = ProductCursorPagination
+
+
+class CategoryProductAPIView(APIView):
+    """Gets all the products in that category"""
+    serializer_class = CategoryProductListSerializer
+
+    def get(self, request, pk):
+        category_id = self.kwargs.get("pk")
+        queryset = Product.objects.filter(category_id=category_id).order_by("-created_at")
+        serializer =  CategoryProductListSerializer(queryset, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    

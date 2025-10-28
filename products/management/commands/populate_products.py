@@ -8,16 +8,27 @@ from products.models import (
 )
 import random
 from decimal import Decimal
+from faker import Faker
 
 
 class Command(BaseCommand):
     help = "Populate the database with sample product data"
+
+    def __init__(self):
+        super().__init__()
+        self.faker = Faker()
 
     def add_arguments(self, parser):
         parser.add_argument(
             "--clear",
             action="store_true",
             help="Clear existing data before populating",
+        )
+        parser.add_argument(
+            "--count",
+            type=int,
+            default=100,
+            help="Number of products to create (default: 100)",
         )
 
     def handle(self, *args, **options):
@@ -32,10 +43,10 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS("Creating sample data..."))
 
         # Create categories
-        self.create_categories()
+        # self.create_categories()
 
         # Create products
-        self.create_products()
+        self.create_products(count=options.get("count", 100))
 
         # Create product variants
         self.create_product_variants()
@@ -126,197 +137,126 @@ class Command(BaseCommand):
                 )
                 self.stdout.write(f"  Created child category: {child_category.name}")
 
-    def create_products(self):
-        """Create sample products"""
-        products_data = [
-            # Electronics - Smartphones
-            {
-                "name": "iPhone 15 Pro",
-                "description": "Latest Apple iPhone with Pro features",
-                "long_description": "The iPhone 15 Pro features a titanium design, A17 Pro chip, and advanced camera system.",
-                "price": Decimal("999.99"),
-                "sku": "IPH15PRO001",
-                "brand": "Apple",
-                "category": "Smartphones",
-                "is_featured": True,
-                "weight": Decimal("0.187"),
-                "dimensions": "146.6 x 70.6 x 8.25 mm",
-            },
-            {
-                "name": "Samsung Galaxy S24",
-                "description": "Premium Android smartphone",
-                "long_description": "Samsung Galaxy S24 with advanced AI features and stunning camera capabilities.",
-                "price": Decimal("799.99"),
-                "sku": "SGS24001",
-                "brand": "Samsung",
-                "category": "Smartphones",
-                "is_featured": True,
-                "weight": Decimal("0.168"),
-                "dimensions": "147.0 x 70.6 x 7.6 mm",
-            },
-            {
-                "name": "Google Pixel 8",
-                "description": "Google's flagship smartphone",
-                "long_description": "Google Pixel 8 with pure Android experience and exceptional photography.",
-                "price": Decimal("699.99"),
-                "sku": "GP8001",
-                "brand": "Google",
-                "category": "Smartphones",
-                "weight": Decimal("0.187"),
-                "dimensions": "150.5 x 70.8 x 8.9 mm",
-            },
-            # Electronics - Laptops
-            {
-                "name": 'MacBook Pro 16"',
-                "description": "Professional laptop for creators",
-                "long_description": "MacBook Pro 16-inch with M3 Pro chip, perfect for professional work.",
-                "price": Decimal("2499.99"),
-                "sku": "MBP16M3001",
-                "brand": "Apple",
-                "category": "Laptops",
-                "is_featured": True,
-                "weight": Decimal("2.15"),
-                "dimensions": "355.7 x 248.1 x 16.8 mm",
-            },
-            {
-                "name": "Dell XPS 13",
-                "description": "Ultra-portable Windows laptop",
-                "long_description": "Dell XPS 13 with Intel Core i7 and stunning InfinityEdge display.",
-                "price": Decimal("1299.99"),
-                "sku": "DXPS13001",
-                "brand": "Dell",
-                "category": "Laptops",
-                "weight": Decimal("1.23"),
-                "dimensions": "295.7 x 199.04 x 15.8 mm",
-            },
-            # Electronics - Audio
-            {
-                "name": "AirPods Pro 2",
-                "description": "Premium wireless earbuds",
-                "long_description": "AirPods Pro 2nd generation with active noise cancellation.",
-                "price": Decimal("249.99"),
-                "sku": "APP2001",
-                "brand": "Apple",
-                "category": "Audio",
-                "is_featured": True,
-                "weight": Decimal("0.056"),
-                "dimensions": "30.9 x 21.8 x 24.0 mm",
-            },
-            {
-                "name": "Sony WH-1000XM5",
-                "description": "Premium noise-canceling headphones",
-                "long_description": "Sony WH-1000XM5 with industry-leading noise cancellation.",
-                "price": Decimal("399.99"),
-                "sku": "SWH1000XM5",
-                "brand": "Sony",
-                "category": "Audio",
-                "weight": Decimal("0.249"),
-                "dimensions": "254 x 192 x 80 mm",
-            },
-            # Clothing
-            {
-                "name": "Nike Air Max 270",
-                "description": "Comfortable running shoes",
-                "long_description": "Nike Air Max 270 with revolutionary Air cushioning technology.",
-                "price": Decimal("130.00"),
-                "sku": "NAM270001",
-                "brand": "Nike",
-                "category": "Shoes",
-                "is_featured": True,
-                "weight": Decimal("0.31"),
-            },
-            {
-                "name": "Levi's 501 Jeans",
-                "description": "Classic straight-leg jeans",
-                "long_description": "The original Levi's 501 jeans, a timeless classic.",
-                "price": Decimal("69.99"),
-                "sku": "L501001",
-                "brand": "Levi's",
-                "category": "Men's Clothing",
-                "weight": Decimal("0.65"),
-            },
-            # Home & Garden
-            {
-                "name": "IKEA MALM Bed Frame",
-                "description": "Modern wooden bed frame",
-                "long_description": "IKEA MALM bed frame in white oak veneer, queen size.",
-                "price": Decimal("179.00"),
-                "sku": "IKMALM001",
-                "brand": "IKEA",
-                "category": "Furniture",
-                "weight": Decimal("35.5"),
-                "dimensions": "209 x 166 x 97 cm",
-            },
-            # Books
-            {
-                "name": "The Great Gatsby",
-                "description": "Classic American novel",
-                "long_description": "F. Scott Fitzgerald's masterpiece about the Jazz Age.",
-                "price": Decimal("12.99"),
-                "sku": "TGG001",
-                "brand": "Scribner",
-                "category": "Fiction",
-                "is_digital": True,
-                "weight": Decimal("0.2"),
-            },
-        ]
+    def generate_product_name(self, category_name):
+        """Generate realistic product names based on category"""
+        category_templates = {
+            "Smartphones": ["Pro", "Max", "Ultra", "Plus", "Mini", "Lite"],
+            "Laptops": ["Pro", "Air", "Book", "Elite", "Spectre", "Pavilion"],
+            "Audio": ["Pro", "Studio", "Max", "Buds", "Elite", "Premium"],
+            "Shoes": ["Air", "Boost", "Zoom", "Runner", "Sport", "Classic"],
+            "Men's Clothing": ["Classic", "Premium", "Essential", "Modern", "Vintage"],
+            "Women's Clothing": ["Classic", "Premium", "Essential", "Modern", "Vintage"],
+            "Furniture": ["Modern", "Classic", "Deluxe", "Comfort", "Premium"],
+            "Fiction": self.faker.catch_phrase(),
+            "Non-Fiction": self.faker.catch_phrase(),
+        }
+        
+        brand_prefix = self.faker.company().split()[0]
+        template = random.choice(category_templates.get(category_name, ["Series"]))
+        
+        if "Clothing" in category_name or "Shoes" in category_name:
+            return f"{brand_prefix} {template} {random.choice(['Shirt', 'Pants', 'Jacket', 'Dress', 'Sneakers'])} {random.randint(100, 999)}"
+        elif "Book" in category_name or category_name in ["Fiction", "Non-Fiction"]:
+            return self.faker.catch_phrase()
+        else:
+            return f"{brand_prefix} {category_name[:-1] if category_name.endswith('s') else category_name} {template} {random.randint(100, 999)}"
+    
+    def generate_price(self, parent_category):
+        """Generate realistic prices based on parent category"""
+        price_ranges = {
+            "Electronics": (299.99, 2999.99),
+            "Clothing": (19.99, 199.99),
+            "Home & Garden": (49.99, 999.99),
+            "Books": (9.99, 49.99),
+        }
+        
+        min_price, max_price = price_ranges.get(parent_category, (19.99, 199.99))
+        price = round(random.uniform(min_price, max_price), 2)
+        return Decimal(str(price))
 
-        for product_data in products_data:
-            try:
-                category = Category.objects.get(name=product_data["category"])
-                product = Product.objects.create(
-                    name=product_data["name"],
-                    slug=slugify(product_data["name"]),
-                    description=product_data["description"],
-                    long_description=product_data.get("long_description", ""),
-                    price=product_data["price"],
-                    sku=product_data["sku"],
-                    brand=product_data.get("brand", ""),
-                    category=category,
-                    is_featured=product_data.get("is_featured", False),
-                    is_digital=product_data.get("is_digital", False),
-                    weight=product_data.get("weight"),
-                    dimensions=product_data.get("dimensions", ""),
-                )
-                self.stdout.write(f"Created product: {product.name}")
-            except Category.DoesNotExist:
-                self.stdout.write(
-                    self.style.ERROR(f'Category "{product_data["category"]}" not found')
-                )
+    def create_products(self, count=100):
+        """Create sample products dynamically using existing categories"""
+        categories = Category.objects.filter(parent__isnull=False)
+        
+        if not categories.exists():
+            self.stdout.write(self.style.ERROR("No child categories found. Please create categories first."))
+            return
+        
+        self.stdout.write(f"Creating {count} products...")
+        
+        for i in range(count):
+            category = random.choice(categories)
+            parent_category = category.parent.name if category.parent else category.name
+            
+            product_name = self.generate_product_name(category.name)
+            price = self.generate_price(parent_category)
+            
+            # Generate SKU
+            sku_prefix = ''.join([c for c in product_name if c.isupper()])[:5]
+            sku = f"{sku_prefix}{random.randint(1000, 9999)}"
+            
+            # Make SKU unique
+            while Product.objects.filter(sku=sku).exists():
+                sku = f"{sku_prefix}{random.randint(1000, 9999)}"
+            
+            product = Product.objects.create(
+                name=product_name,
+                slug=slugify(product_name),
+                description=self.faker.sentence(nb_words=10),
+                long_description=self.faker.paragraph(nb_sentences=5),
+                price=price,
+                sku=sku,
+                brand=self.faker.company(),
+                category=category,
+                is_featured=random.choice([True, False]) if random.random() < 0.2 else False,
+                is_digital=True if parent_category == "Books" else False,
+                weight=Decimal(str(round(random.uniform(0.1, 5.0), 2))),
+                dimensions=f"{random.randint(100, 400)} x {random.randint(50, 300)} x {random.randint(5, 100)} mm",
+            )
+            
+            if (i + 1) % 20 == 0:
+                self.stdout.write(f"Created {i + 1} products...")
+        
+        self.stdout.write(self.style.SUCCESS(f"Created {count} products successfully!"))
 
     def create_product_variants(self):
         """Create product variants"""
-        smartphones = Product.objects.filter(category__name="Smartphones")
-        clothing = Product.objects.filter(
-            category__name__in=["Shoes", "Men's Clothing"]
-        )
+        products = Product.objects.all()
+        
+        variant_options = {
+            "Electronics": {
+                "Storage": ["64GB", "128GB", "256GB", "512GB", "1TB"],
+                "Color": ["Black", "White", "Silver", "Gold", "Blue", "Red"],
+            },
+            "Clothing": {
+                "Size": ["XS", "S", "M", "L", "XL", "XXL"],
+                "Color": ["Black", "White", "Blue", "Red", "Green", "Grey"],
+            },
+            "Shoes": {
+                "Size": ["7", "8", "9", "10", "11", "12"],
+                "Color": ["Black", "White", "Blue", "Red"],
+            },
+        }
 
-        # Create smartphone variants (storage options)
-        for phone in smartphones:
-            storage_options = ["128GB", "256GB", "512GB"]
-            for i, storage in enumerate(storage_options):
-                price_increase = Decimal(str(i * 100))  # Convert to string first
-                ProductVarient.objects.create(
-                    product=phone,
-                    name=f"{storage} Storage",
-                    sku=f"{phone.sku}-{storage}",
-                    price=phone.price + price_increase,
-                )
-
-        # Create clothing variants (sizes)
-        for item in clothing:
-            if item.category.name == "Shoes":
-                sizes = ["8", "9", "10", "11", "12"]
-            else:
-                sizes = ["S", "M", "L", "XL", "XXL"]
-
-            for size in sizes:
-                ProductVarient.objects.create(
-                    product=item,
-                    name=f"Size {size}",
-                    sku=f"{item.sku}-{size}",
-                    price=item.price,
-                )
+        for product in products:
+            parent_category = product.category.parent.name if product.category.parent else product.category.name
+            
+            # 70% of products get variants
+            if random.random() < 0.7:
+                category_variants = variant_options.get(parent_category, {})
+                
+                if category_variants:
+                    variant_type = random.choice(list(category_variants.keys()))
+                    options = category_variants[variant_type]
+                    
+                    for i, option in enumerate(random.sample(options, min(3, len(options)))):
+                        price_variation = Decimal(str(random.uniform(-10, 50)))
+                        ProductVarient.objects.create(
+                            product=product,
+                            name=f"{variant_type}: {option}",
+                            sku=f"{product.sku}-{option.replace(' ', '')}",
+                            price=product.price + price_variation,
+                        )
 
         self.stdout.write("Created product variants")
 

@@ -22,7 +22,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
         required=True,
         # style={"input_type": "password"}
     )
-
+    
     class Meta:
         model = User
         fields = [

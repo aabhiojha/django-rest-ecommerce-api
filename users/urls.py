@@ -22,6 +22,6 @@ urlpatterns = [
     # role
     path("roles/list/", views.ListRolesView.as_view()),
     path("role/create/", views.CreateRoleView.as_view()),
-    path("user/role/assign/", views.UserRoleCreateView.as_view()),
+    path("user/role/assign/", views.UserRoleAssignView.as_view()),
     path("user/role/list/", views.UserRoleListView.as_view()),
 ]

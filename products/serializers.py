@@ -127,6 +127,37 @@ class ProductListSerializer(serializers.ModelSerializer):
         return None
 
 
+class CategoryProductListSerializer(serializers.ModelSerializer):
+    primary_image = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Product
+        fields = [
+            "id",
+            "name",
+            "slug",
+            "description",
+            "long_description",
+            "price",
+            "sku",
+            "brand",
+            "primary_image",
+            "weight",
+            "dimensions",
+            "is_featured",
+            "is_digital",
+        ]
+
+    def get_primary_image(self, obj):
+        primary_image = obj.images.filter(is_primary=True).first()
+        if primary_image:
+            return ProductImageSerializer(primary_image).data
+        return None
+    
+
+
+
+
 class ProductDetailSerializer(serializers.ModelSerializer):
     # category = CategoryListSerializer(read_only=True)
     varients = ProductVarientSerializer(many=True, read_only=True)

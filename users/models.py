@@ -9,9 +9,7 @@ import uuid
 from django.conf import settings 
 
 class User(AbstractBaseUser):
-    email = models.EmailField(
-        unique=True, db_index=True, max_length=255, verbose_name="Email Address"
-    )
+    email = models.EmailField(unique=True, db_index=True, max_length=255, verbose_name="Email Address")
     first_name = models.CharField(max_length=150, blank=True)
     last_name = models.CharField(max_length=150, blank=True)
     phone = models.CharField(max_length=15, blank=True)

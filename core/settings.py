@@ -27,8 +27,9 @@ SECRET_KEY = "django-insecure-luej8(g9iv2)ywyz6)cly^nn6s7xvu62_xpgp!$rn!1m(_nj84
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+# ALLOWED_HOSTS = ['192.168.1.11', '172.28.151.64', 'localhost', "127.0.0.1"]
 
+ALLOWED_HOSTS = ["*"]
 
 # Application definition
 
@@ -42,6 +43,8 @@ INSTALLED_APPS = [
     "rest_framework",
     "django_extensions",
     "drf_spectacular",
+    "silk",
+    "corsheaders",
     "django_filters",
     "rest_framework_simplejwt",
     "users",
@@ -53,13 +56,29 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
+    #
+    "silk.middleware.SilkyMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
+
+
+# CORS Configuration
+CORS_ALLOW_ALL_ORIGINS = True  # Allow all origins during development
+
+# For production
+# CORS_ALLOWED_ORIGINS = [
+#     "http://localhost:3000",
+#     "http://localhost:8000",
+#     "http://127.0.0.1:8000",
+#     "http://192.168.1.6",
+#     "http://172.28.151.64",
+# ]
 
 ROOT_URLCONF = "core.urls"
 
@@ -175,19 +194,19 @@ SPECTACULAR_SETTINGS = {
 # STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
 # STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET")
 
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 # EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # EMAIL_BACKEND=config("EMAIL_BACKEND")
-EMAIL_HOST=config("EMAIL_HOST")
-EMAIL_PORT=config("EMAIL_PORT")
-EMAIL_USE_TLS=config("EMAIL_USE_TLS")
-EMAIL_HOST_USER=config("EMAIL_HOST_USER")
-EMAIL_HOST_PASSWORD=config("EMAIL_HOST_PASSWORD")
-DEFAULT_FROM_EMAIL=config("DEFAULT_FROM_EMAIL")
+EMAIL_HOST = config("EMAIL_HOST")
+EMAIL_PORT = config("EMAIL_PORT")
+EMAIL_USE_TLS = config("EMAIL_USE_TLS")
+EMAIL_HOST_USER = config("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD")
+DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL")
 
-STRIPE_PUBLISHABLE_KEY= config("STRIPE_PUBLISHABLE_KEY")
-STRIPE_SECRET_KEY=config("STRIPE_SECRET_KEY")
-STRIPE_WEBHOOK_SECRET=config("STRIPE_WEBHOOK_SECRET")
+STRIPE_PUBLISHABLE_KEY = config("STRIPE_PUBLISHABLE_KEY")
+STRIPE_SECRET_KEY = config("STRIPE_SECRET_KEY")
+STRIPE_WEBHOOK_SECRET = config("STRIPE_WEBHOOK_SECRET")
 
 PASSWORD_RESET_TIMEOUT = config("PASSWORD_RESET_TIMEOUT")

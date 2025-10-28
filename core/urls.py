@@ -49,3 +49,5 @@ urlpatterns = [
     path("payment/", include("payment.urls")),
 ] + schema_urls
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+# silk profiling
+urlpatterns += [path('silk/', include('silk.urls', namespace='silk'))]

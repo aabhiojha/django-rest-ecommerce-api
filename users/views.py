@@ -23,9 +23,10 @@ from core.email import send_otp
 
 
 class UserCreateView(APIView):
-    '''
+    """
     Create User
-    '''
+    """
+
     serializer_class = UserCreateSerializer
 
     def post(self, request):
@@ -63,25 +64,24 @@ class ResetPasswordView(APIView):
         serializer = PasswordResetSerializer(data=request.data)
         if serializer.is_valid():
             email = serializer.validated_data.get("email")
-            
+
             try:
                 user = User.objects.get(email=email)
-                
 
                 otp_code = generate_otp(user)
-                
+
                 # Send OTP via email
                 send_otp(user, otp_code)
 
                 return Response(
                     {"detail": "Password reset OTP has been sent to your email."},
-                    status=status.HTTP_200_OK
+                    status=status.HTTP_200_OK,
                 )
-            
+
             except User.DoesNotExist:
                 return Response(
                     {"detail": "The user associated with this email does not exist."},
-                    status=status.HTTP_200_OK
+                    status=status.HTTP_200_OK,
                 )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -104,11 +104,11 @@ class ResetPasswordConfirmView(APIView):
 
             try:
                 user = User.objects.get(email=email)
-                
-                # TODO possibilities
+
+                #  possibilities
                 # - the otp for this email does not exist
                 # - user enters the otp after it has expired
-                # - user tries to use the same otp to reset the password after 
+                # - user tries to use the same otp to reset the password after
                 #      resetting the password for the first time
 
                 # Get the OTP record
@@ -117,27 +117,37 @@ class ResetPasswordConfirmView(APIView):
                     otp=user_otp,
                     is_active=True,
                 ).first()
-                
+
                 # Need to check if the otp is valid and not expired
                 if otp_record and not otp_record.is_expired:
                     user.set_password(new_password)
                     user.save()
-                    
+
                     # delete the otp after password reset is complete
                     otp_record.delete()
 
                     return Response(
                         {"detail": "Password reset successful."},
-                        status=status.HTTP_200_OK
+                        status=status.HTTP_200_OK,
                     )
-                    
+
             except User.DoesNotExist:
                 return Response(
-                    {"error": "User not found."},
-                    status=status.HTTP_404_NOT_FOUND
+                    {"error": "User not found."}, status=status.HTTP_404_NOT_FOUND
                 )
-        
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ListRolesView(APIView):
+    """Lists all the roles in db"""
+
+    serializer_class = RoleListSerializer
+
+    def get(self, request):
+        roles = Role.objects.all()
+        serializer = RoleListSerializer(roles, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 # role ko lagi view chaiyo
@@ -157,7 +167,9 @@ class CreateRoleView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class UserRoleCreateView(APIView):
+class UserRoleAssignView(APIView):
+    """Assigns User with Role"""
+
     serializer_class = UserRoleCreateSerializer
 
     def post(self, request):
@@ -169,17 +181,11 @@ class UserRoleCreateView(APIView):
 
 
 class UserRoleListView(APIView):
+    """Lists the roles a user has"""
+
     serializer_class = UserRoleListSerializer
 
     def get(self, request):
         user_roles = UserRole.objects.all()
         serializer = UserRoleListSerializer(user_roles, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-    
-class ListRolesView(APIView):
-    serializer_class = RoleListSerializer
-
-    def get(self, request):
-        roles = Role.objects.all()
-        serializer = RoleListSerializer(roles, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
