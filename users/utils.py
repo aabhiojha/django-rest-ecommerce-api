@@ -4,7 +4,8 @@ import uuid
 from django.utils import timezone
 from django.conf import settings
 from users.models import OTP
-
+from django.utils.text import slugify
+from django.shortcuts import get_object_or_404
 
 def generate_otp(user):
     # Generate 6-digit numeric OTP

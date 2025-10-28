@@ -6,7 +6,8 @@ from django.contrib.auth.models import AbstractBaseUser
 from .managers import UserManager
 from .validators import validate_website, validate_phone
 import uuid
-from django.conf import settings 
+from django.conf import settings
+from django.utils.text import slugify
 
 class User(AbstractBaseUser):
     email = models.EmailField(unique=True, db_index=True, max_length=255, verbose_name="Email Address")
@@ -185,9 +186,9 @@ class PermissionCategory(models.Model):
     """Permissions collection for frontend purpose"""
 
     name = models.CharField(max_length=100, unique=True)
-    slug = models.SlugField(max_length=100, unique=True)
+    slug = models.SlugField(max_length=100, unique=True, blank=True)
     description = models.TextField(blank=True)
-    is_active = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -197,8 +198,13 @@ class PermissionCategory(models.Model):
         verbose_name_plural = "Permission Categories"
         ordering = ["name"]
 
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        return super().save(*args, **kwargs)
+
     def __str__(self):
-        return self.name
+        return f"{self.id} - {self.name}"
 
     def get_active_permissions(self):
         return self.permissions.filter(is_active=True)
@@ -214,14 +220,13 @@ class Permission(models.Model):
     code_name = models.CharField(
         max_length=100,
         unique=True,
-        db_index=True,
         help_text="Unique identifier for the permission eg 'can_view_products'",
     )
-    description = models.TextField(blank=True)
+    description = models.TextField(blank=True, max_length=255)
     category = models.ForeignKey(
         PermissionCategory, on_delete=models.CASCADE, related_name="permissions"
     )
-    is_active = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -230,10 +235,6 @@ class Permission(models.Model):
         verbose_name = "Permission"
         verbose_name_plural = "Permissions"
         ordering = ["category", "name"]
-        indexes = [
-            models.Index(fields=["code_name"]),
-            models.Index(fields=["is_active", "category"]),
-        ]
 
     def __str__(self):
         return f"{self.name} ({self.code_name})"

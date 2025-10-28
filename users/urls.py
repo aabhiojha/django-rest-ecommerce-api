@@ -19,9 +19,20 @@ urlpatterns = [
     path("user/list/", user_views.ListUsersView.as_view()),
     path("user/<int:pk>/",user_views.UserProfileDetailView.as_view()),
     path("user/me/", user_views.CurrentUserView.as_view()),
+    # Permission category
+    path("permission/category/list/", views.ListPermissionCategoriesView.as_view()),
+    path("permission/category/create/", views.CreatePermissionCategoriesView.as_view()),
+    path("permission/category/delete/<int:pk>/", views.DeletePermissionCategoryView.as_view()),
+    path("permission/category/edit/<int:pk>/",views.EditPermissionCategoryView.as_view()),
+    # Permission
+    path("permission/list/",views.ListPermissionsView.as_view()),
+    path("permission/create/",views.CreatePermissionsView.as_view()),
+    path("permission/delete/<int:pk>/",views.DeletePermissionView.as_view()),
+    path("permission/edit/<int:pk>/",views.EditPermissionView.as_view()),
     # role
-    path("roles/list/", views.ListRolesView.as_view()),
-    path("role/create/", views.CreateRoleView.as_view()),
-    path("user/role/assign/", views.UserRoleAssignView.as_view()),
-    path("user/role/list/", views.UserRoleListView.as_view()),
+    path("role/list/", views.ListRolesView.as_view()),
+    path("role/<int:pk>/", views.RoleCRUDView.as_view()),
+    # User-Role assignment    
+    # path("user/role/assign/", views.UserRoleAssignView.as_view()),
+    # path("user/role/list/", views.UserRoleListView.as_view()),
 ]

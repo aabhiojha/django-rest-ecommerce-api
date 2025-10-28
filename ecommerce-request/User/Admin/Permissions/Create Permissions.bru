@@ -1,11 +1,11 @@
 meta {
-  name: RoleList
+  name: Create Permissions
   type: http
   seq: 2
 }
 
-get {
-  url: http://127.0.0.1:8000/roles/list/
+post {
+  url: http://127.0.0.1:8000/permission/category/create/
   body: none
   auth: inherit
 }

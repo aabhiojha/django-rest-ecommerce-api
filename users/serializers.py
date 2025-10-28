@@ -22,7 +22,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
         required=True,
         # style={"input_type": "password"}
     )
-    
+
     class Meta:
         model = User
         fields = [
@@ -162,18 +162,109 @@ class RoleCreateSerializer(serializers.ModelSerializer):
         ]
 
 
-class PermissionSerializer(serializers.ModelSerializer):
-
+# permission Serializers
+class PermissionListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Permission
-        fields = ["name"]
+        fields = [
+            "id",
+            "name",
+            "code_name",
+            "description",
+            "category",
+            "is_active",
+        ]
+        read_only_field = ["is_active", "category"]
+
+
+class PermissionCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Permission
+        fields = [
+            "name",
+            "code_name",
+            "description",
+            "category",
+            "is_active",
+        ]
+
+class PermissionEditSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Permission
+        fields = [
+            "name",
+            "code_name",
+            "description",
+            "category",
+            "is_active",
+        ]
+
+# Permission Category serializers
+class PermissionCategoryListSerializer(serializers.ModelSerializer):
+    permissions = PermissionListSerializer(many=True)
+    class Meta:
+        model = PermissionCategory
+        fields = [
+            "id",
+            "name",
+            "slug",
+            "permissions",
+            "description",
+            "is_active",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = [
+            "name",
+            "slug",
+            "description",
+            "permissions",
+            "is_active",
+            "created_at",
+            "updated_at",
+        ]
+
+
+class PermissionCategoryCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PermissionCategory
+        fields = [
+            "name",
+            "slug",
+            "description",
+            "is_active",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = [
+            "created_at",
+            "updated_at",
+        ]
+
+
+class PermissionCategoryEditSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PermissionCategory
+        fields = [
+            "id",
+            "name",
+            "slug",
+            "description",
+            "is_active",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = [
+            "id",
+            "created_at",
+            "updated_at",
+        ]
+
 
 
 class RoleListSerializer(serializers.ModelSerializer):
-    # permissions = PermissionSerializer()
-    # permission_required = "can_manage_roles"
-
     permissions = serializers.SerializerMethodField()
+    # TODO need to display permissions in permission category groups
 
     class Meta:
         model = Role
@@ -190,7 +281,7 @@ class RoleListSerializer(serializers.ModelSerializer):
         ]
 
     def get_permissions(self, obj):
-        return obj.permissions.filter(is_active=True).values_list("name", flat=True)
+        return obj.permissions.filter(is_active=True).values_list("code_name", flat=True)
 
 
 class UserRoleCreateSerializer(serializers.ModelSerializer):

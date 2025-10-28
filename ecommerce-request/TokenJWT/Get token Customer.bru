@@ -1,18 +1,19 @@
 meta {
-  name: getToken
+  name: Get token Customer
   type: http
   seq: 1
 }
 
-get {
+post {
   url: http://127.0.0.1:8000/token/
   body: json
-  auth: inherit
+  auth: bearer
 }
 
 body:json {
   {
-    "email":""
+    "email":"customer3@gmail.com",
+    "password":"YoPasswordHo@123"
   }
 }
 
