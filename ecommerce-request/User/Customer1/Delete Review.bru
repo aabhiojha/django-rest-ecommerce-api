@@ -1,11 +1,11 @@
 meta {
-  name: user/me/
+  name: Delete Review
   type: http
-  seq: 1
+  seq: 3
 }
 
-get {
-  url: http://127.0.0.1:8000/user/me/
+delete {
+  url: http://127.0.0.1:8000/reviews/delete/19/
   body: none
   auth: inherit
 }

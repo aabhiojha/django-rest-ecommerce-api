@@ -1,0 +1,55 @@
+meta {
+  name: Role Update
+  type: http
+  seq: 7
+}
+
+patch {
+  url: http://127.0.0.1:8000/role/10/
+  body: json
+  auth: inherit
+}
+
+body:json {
+  // {
+  //   "permissions": [
+  //     56,
+  //     57,
+  //     55,
+  //     54,
+  //     48,
+  //     51,
+  //     50,
+  //     47,
+  //     49,
+  //     42,
+  //     44,
+  //     43,
+  //     45,
+  //     46,
+  //     53,
+  //     52,
+  //     41,
+  //     40,
+  //     58,
+  //     59,
+  //     60,
+  //   ]
+  // }
+  // {}
+  {
+      "permissions": [
+      48,
+      47,
+        56,
+        58,
+        59,
+        61
+    ]
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

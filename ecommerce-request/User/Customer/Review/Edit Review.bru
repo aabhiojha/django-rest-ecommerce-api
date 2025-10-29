@@ -1,0 +1,23 @@
+meta {
+  name: Edit Review
+  type: http
+  seq: 2
+}
+
+patch {
+  url: http://127.0.0.1:8000/reviews/edit/5/
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "rating":3,
+    "comment":"ok ok product. not too good."
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

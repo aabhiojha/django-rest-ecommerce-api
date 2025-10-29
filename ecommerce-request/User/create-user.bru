@@ -5,14 +5,29 @@ meta {
 }
 
 post {
-  url: http://127.0.0.1:8000/user/create/
+  url: http://127.0.0.1:8000/user/register/
   body: json
   auth: inherit
 }
 
 body:json {
+  // {
+  //   "email":"customer.345234@gmail.com",
+  //   "password":"YoPasswordHo@123",
+  //   "first_name":"Customer",
+  //   "last_name":"Prasad",
+  //   "phone":"9849257474",
+  //   "date_of_birth":"2081-12-12"
+  // }
+  
+  // 
+  //   "email":"seller.232345123@gmail.com",
+  //   "password":"YoPasswordHo@123"
+  // }
+  
+  
   {
-    "email":"customer.345234@gmail.com",
+    "email":"customer1@gmail.com",
     "password":"YoPasswordHo@123",
     "first_name":"Customer",
     "last_name":"Prasad",
@@ -20,10 +35,6 @@ body:json {
     "date_of_birth":"2081-12-12"
   }
   
-  // {
-  //   "email":"seller.232345123@gmail.com",
-  //   "password":"YoPasswordHo@123"
-  // }
 }
 
 settings {

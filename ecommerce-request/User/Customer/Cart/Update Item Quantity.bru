@@ -1,19 +1,18 @@
 meta {
-  name: Role Assign To User
+  name: Update Item Quantity
   type: http
-  seq: 1
+  seq: 3
 }
 
-post {
-  url: http://127.0.0.1:8000/user/role/assign/
+patch {
+  url: http://127.0.0.1:8000/cart/item/update/8/
   body: json
   auth: inherit
 }
 
 body:json {
   {
-    "user":27,
-    "role":10
+    
   }
 }
 

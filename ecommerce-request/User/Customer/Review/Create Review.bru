@@ -1,19 +1,20 @@
 meta {
-  name: Role Assign To User
+  name: Create Review
   type: http
   seq: 1
 }
 
 post {
-  url: http://127.0.0.1:8000/user/role/assign/
+  url: http://127.0.0.1:8000/reviews/create/
   body: json
   auth: inherit
 }
 
 body:json {
   {
-    "user":27,
-    "role":10
+    "product":14,
+    "rating": 5,
+    "comment": "okok cha yo pani"
   }
 }
 

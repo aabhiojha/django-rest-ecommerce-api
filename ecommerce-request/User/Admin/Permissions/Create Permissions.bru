@@ -5,11 +5,43 @@ meta {
 }
 
 post {
-  url: http://127.0.0.1:8000/permission/category/create/
-  body: none
+  url: http://127.0.0.1:8000/permission/create/
+  body: json
   auth: inherit
+}
+
+body:json {
+  // {
+  //   "name":"Create Review",
+  //   "code_name":"can_create_review",
+  //   "category":29
+  // }
+  // {
+  //   "name":"Delete Review",
+  //   "code_name":"can_delete_review",
+  //   "category":29
+  // }
+  
+  // {
+  //   "name":"Manage Review",
+  //   "code_name":"can_manage_review",
+  //   "category":29
+  // }
+  
+  // {
+  //   "name":"Manage Carts",
+  //   "code_name":"can_manage_carts",
+  //   "category":31
+  // }
+  
+  {
+    "name":"Manage Own Carts",
+    "code_name":"can_manage_own_cart",
+    "category":31
+  }
 }
 
 settings {
   encodeUrl: true
+  timeout: 0
 }

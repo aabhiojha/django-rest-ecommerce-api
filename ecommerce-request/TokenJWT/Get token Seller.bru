@@ -6,10 +6,18 @@ meta {
 
 post {
   url: http://127.0.0.1:8000/token/
-  body: none
+  body: json
   auth: inherit
+}
+
+body:json {
+  {
+    "email":"seller.232345123@gmail.com",
+    "password":"YoPasswordHo@123"
+  }
 }
 
 settings {
   encodeUrl: true
+  timeout: 0
 }

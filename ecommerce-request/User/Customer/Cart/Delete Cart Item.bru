@@ -1,0 +1,20 @@
+meta {
+  name: Delete Cart Item
+  type: http
+  seq: 4
+}
+
+delete {
+  url: http://127.0.0.1:8000/cart/item/delete/9/
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {}
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
