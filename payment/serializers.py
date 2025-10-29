@@ -1,7 +1,6 @@
 from rest_framework import serializers
 from orders.serializers import OrderSerializer
 from payment.models import Payment
-from users.serializers import UserSerializer
 
 class PaymentSerializer(serializers.ModelSerializer):
     user_email = serializers.EmailField(source="user.email", read_only=True)
