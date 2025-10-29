@@ -15,10 +15,15 @@ class Review(models.Model):
     product = models.ForeignKey(
         Product, on_delete=models.CASCADE, related_name="reviews"
     )
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="reviews")
+    comment = models.TextField(blank=True)
     rating = models.PositiveSmallIntegerField(choices=RATING_CHOICES)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        unique_together = ("product", "user")
+        ordering = ["-created_at"]
+
     def __str__(self):
-        return f"review of {self.product} by {self.user}"
+        return f"review of {self.product.name} by {self.user.email}"
