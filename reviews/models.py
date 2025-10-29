@@ -16,7 +16,7 @@ class Review(models.Model):
         Product, on_delete=models.CASCADE, related_name="reviews"
     )
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    rating = models.CharField(choices=RATING_CHOICES)
+    rating = models.PositiveSmallIntegerField(choices=RATING_CHOICES)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
