@@ -13,7 +13,6 @@ from .serializers import (
     ProductListSerializer,
     ProductDetailSerializer,
     ProductUpdateSerializer,
-    CategoryProductListSerializer
 )
 
 from .models import Category, ProductVarient, ProductImage, Product
@@ -42,7 +41,6 @@ class ProductListAPIView(generics.ListAPIView):
     queryset = Product.objects.all().order_by("-created_at")
     serializer_class = ProductListSerializer
     pagination_class = ProductCursorPagination
-    # filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_class = ProductFilter
     search_fields = ["name", "brand", "description", "sku"]
 
@@ -71,14 +69,3 @@ class ProductFeaturedAPIView(generics.ListAPIView):
     serializer_class = ProductListSerializer
     pagination_class = ProductCursorPagination
 
-
-class CategoryProductAPIView(APIView):
-    """Gets all the products in that category"""
-    serializer_class = CategoryProductListSerializer
-
-    def get(self, request, pk):
-        category_id = self.kwargs.get("pk")
-        queryset = Product.objects.filter(category_id=category_id).order_by("-created_at")
-        serializer =  CategoryProductListSerializer(queryset, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-    

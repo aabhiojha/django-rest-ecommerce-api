@@ -90,13 +90,6 @@ class ProductImageSerializer(serializers.ModelSerializer):
         fields = ["id", "alt_text", "is_primary", "sort_order"]
 
 
-# # product attribute
-# class ProductAttributeSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = ProductAttribute
-#         fields = ["id", "name", "value"]
-
-
 class ProductListSerializer(serializers.ModelSerializer):
     category = CategoryListSerializer()
     primary_image = serializers.SerializerMethodField()
@@ -153,9 +146,6 @@ class CategoryProductListSerializer(serializers.ModelSerializer):
         if primary_image:
             return ProductImageSerializer(primary_image).data
         return None
-    
-
-
 
 
 class ProductDetailSerializer(serializers.ModelSerializer):

@@ -1,6 +1,7 @@
 from django.db import models
 from core.models import BaseModel
 from products.model_validators import validate_price
+from users.models import User
 
 
 class Category(BaseModel):
@@ -28,6 +29,8 @@ class Category(BaseModel):
 class Product(BaseModel):
     name = models.CharField(max_length=200)
     slug = models.SlugField(unique=True, blank=True)
+    # To track which user added the product
+    user = models.ForeignKey(User, on_delete=models.DO_NOTHING, related_name="products")
     category = models.ForeignKey(
         Category,
         on_delete=models.CASCADE,

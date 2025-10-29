@@ -9,5 +9,5 @@ urlpatterns = [
     path("create/", views.ProductCreateAPIView.as_view()),
     path("update/<int:pk>", views.ProductUpdateAPIView.as_view()),
     path("detail/<int:pk>/", views.ProductDetailAPIView.as_view()),
-    path('category/<int:pk>/products/', views.CategoryProductAPIView.as_view(), name='category-products'),
+    # path('category/<int:pk>/products/', views.CategoryProductAPIView.as_view(), name='category-products'),
 ]
