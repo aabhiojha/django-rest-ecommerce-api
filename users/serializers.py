@@ -274,6 +274,7 @@ class RoleListSerializer(serializers.ModelSerializer):
         model = Role
         # fields = ""
         fields = [
+            "id",
             "name",
             "slug",
             "description",

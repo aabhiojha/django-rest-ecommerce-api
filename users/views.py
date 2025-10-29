@@ -18,7 +18,7 @@ from .serializers import (
     PermissionCategoryCreateSerializer,
 )
 from rest_framework.permissions import IsAuthenticated
-from .permissions import HasPermissions
+from core.permissions import HasPermissions
 
 
 from .models import Role, User, OTP, UserRole, Permission, PermissionCategory

@@ -30,6 +30,7 @@ urlpatterns = [
     path("permission/edit/<int:pk>/",views.EditPermissionView.as_view()),
     # role
     path("role/list/", views.ListRolesView.as_view()),
+    path('role/create/', views.CreateRoleView.as_view()),
     path("role/<int:pk>/", views.RoleCRUDView.as_view()),
     # User-Role assignment    
     path("user/role/assign/", views.UserRoleAssignView.as_view()),

@@ -9,7 +9,7 @@ from users.models import User, UserProfile
 from core.email import welcome_mail
 
 from .serializers import UserDetailSerializer, UserListSerializer, UserCreateSerializer, UserUpdateSerializer
-from .permissions import HasPermissions
+from core.permissions import HasPermissions
 
 
 class ListUsersView(APIView):

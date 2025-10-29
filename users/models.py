@@ -243,9 +243,13 @@ class Permission(models.Model):
 class Role(models.Model):
     """Role groups multiple permissions"""
 
+    def get_slug(self, name):
+        self.slug = slugify(name)
+        return self.slug
+
     name = models.CharField(max_length=100, unique=True)
-    slug = models.CharField(max_length=100, unique=True)
-    description = models.TextField(blank=True)
+    slug = models.CharField(max_length=100, unique=True, blank=True)
+    description = models.TextField(max_length=255)
     permissions = models.ManyToManyField(Permission, related_name="roles", blank=True)
     is_active = models.BooleanField(default=True)
     is_system_role = models.BooleanField(default=False)
@@ -259,6 +263,12 @@ class Role(models.Model):
 
     def __str__(self):
         return self.name
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        return super().save(*args, **kwargs)
+
 
     def get_active_permissions(self):
         return self.permissions.filter(is_active=True)
