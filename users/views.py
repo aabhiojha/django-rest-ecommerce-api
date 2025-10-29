@@ -15,35 +15,17 @@ from .serializers import (
     RoleListSerializer,
     UserRoleCreateSerializer,
     PermissionCategoryListSerializer,
-    PermissionCategoryCreateSerializer
+    PermissionCategoryCreateSerializer,
 )
 from rest_framework.permissions import IsAuthenticated
 from .permissions import HasPermissions
 
-from core.email import welcome_mail
 
 from .models import Role, User, OTP, UserRole, Permission, PermissionCategory
-from .serializers import UserSerializer, UserCreateSerializer, UserRoleListSerializer
+from .serializers import UserRoleListSerializer
 
 from .utils import generate_otp
 from core.email import send_otp
-
-
-class UserCreateView(APIView):
-    """
-    Create User
-    """
-
-    serializer_class = UserCreateSerializer
-
-    def post(self, request):
-        serializer = UserCreateSerializer(data=request.data)
-        if serializer.is_valid():
-            user = serializer.save()
-            welcome_mail(user)
-
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 # password change view
@@ -146,7 +128,6 @@ class ResetPasswordConfirmView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-
 # Permission category views
 class ListPermissionCategoriesView(APIView):
     serializer_class = PermissionCategoryListSerializer
@@ -157,6 +138,7 @@ class ListPermissionCategoriesView(APIView):
         permission_category = PermissionCategory.objects.all()
         serializer = PermissionCategoryListSerializer(permission_category, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 class CreatePermissionCategoriesView(APIView):
     serializer_class = PermissionCategoryCreateSerializer
@@ -171,6 +153,7 @@ class CreatePermissionCategoriesView(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 class DeletePermissionCategoryView(APIView):
     lookup_field = "pk"
     permission_classes = [IsAuthenticated, HasPermissions]
@@ -180,9 +163,15 @@ class DeletePermissionCategoryView(APIView):
         # get the object
         permission_category = PermissionCategory.objects.get(id=pk)
         if not permission_category:
-            return Response({"error":f"The category with id={pk} does not exist"}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"error": f"The category with id={pk} does not exist"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
         permission_category.delete()
-        return Response({"mesasge":f"The category {permission_category} has been deleted"}, status=status.HTTP_200_OK)
+        return Response(
+            {"mesasge": f"The category {permission_category} has been deleted"},
+            status=status.HTTP_200_OK,
+        )
 
 
 class EditPermissionCategoryView(APIView):
@@ -193,13 +182,15 @@ class EditPermissionCategoryView(APIView):
 
     def patch(self, request, pk):
         permission_category = PermissionCategory.objects.get(id=pk)
-        serializer = PermissionCategoryEditSerializer(permission_category,data=request.data, partial=True)
+        serializer = PermissionCategoryEditSerializer(
+            permission_category, data=request.data, partial=True
+        )
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-            
+
 # Permission Related views
 class ListPermissionsView(APIView):
     serializer_class = PermissionListSerializer
@@ -210,6 +201,7 @@ class ListPermissionsView(APIView):
         permission = Permission.objects.all()
         serializer = PermissionListSerializer(permission, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 class CreatePermissionsView(APIView):
     serializer_class = PermissionCreateSerializer
@@ -224,6 +216,7 @@ class CreatePermissionsView(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 class DeletePermissionView(APIView):
     lookup_field = "pk"
     permission_classes = [IsAuthenticated, HasPermissions]
@@ -233,10 +226,15 @@ class DeletePermissionView(APIView):
         # get the object
         permission = Permission.objects.get(id=pk)
         if not permission:
-            return Response({"error":f"The permission with id={pk} does not exist"}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"error": f"The permission with id={pk} does not exist"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
         permission.delete()
-        return Response({"mesasge":f"The permission {permission} has been deleted"},             status=status.HTTP_204_NO_CONTENT
-)
+        return Response(
+            {"mesasge": f"The permission {permission} has been deleted"},
+            status=status.HTTP_204_NO_CONTENT,
+        )
 
 
 class EditPermissionView(APIView):
@@ -247,12 +245,13 @@ class EditPermissionView(APIView):
 
     def patch(self, request, pk):
         permission = Permission.objects.get(id=pk)
-        serializer = PermissionEditSerializer(permission,data=request.data, partial=True)
+        serializer = PermissionEditSerializer(
+            permission, data=request.data, partial=True
+        )
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        
 
 
 # role ko lagi views
@@ -261,6 +260,7 @@ class EditPermissionView(APIView):
 
 class ListRolesView(APIView):
     """Lists all the roles in db"""
+
     serializer_class = RoleListSerializer
 
     def get(self, request):
@@ -281,6 +281,7 @@ class CreateRoleView(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 class RoleCRUDView(APIView):
     permission_classes = [IsAuthenticated, HasPermissions]
     permissions_required = "can_manage_roles"
@@ -292,7 +293,9 @@ class RoleCRUDView(APIView):
 
     def patch(self, request, pk):
         role = Role.objects.get(pk=pk)
-        serializer = RoleCreateSerializer(instance=role, data=request.data, partial=True)
+        serializer = RoleCreateSerializer(
+            instance=role, data=request.data, partial=True
+        )
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
@@ -304,16 +307,13 @@ class RoleCRUDView(APIView):
         role.delete()
         return Response(
             {"message": f"Role '{role.name}' has been deleted successfully."},
-            status=status.HTTP_204_NO_CONTENT
+            status=status.HTTP_204_NO_CONTENT,
         )
-
-
-
-
 
 
 class UserRoleAssignView(APIView):
     """Assigns User with Role"""
+
     serializer_class = UserRoleCreateSerializer
     permission_classes = [IsAuthenticated, HasPermissions]
     permissions_required = "can_manage_roles"

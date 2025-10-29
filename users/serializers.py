@@ -260,7 +260,11 @@ class PermissionCategoryEditSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
 
-
+class RoleSimpleSerializer(serializers.ModelSerializer):
+    """A simple serializer to represent a role with just its name and slug."""
+    class Meta:
+        model = Role
+        fields = ['id', 'name', 'slug']
 
 class RoleListSerializer(serializers.ModelSerializer):
     permissions = serializers.SerializerMethodField()
@@ -305,12 +309,64 @@ class UserRoleListSerializer(serializers.ModelSerializer):
 
 
 # Only for listing purpose serializer
-class UserSerializer(serializers.ModelSerializer):
+class UserListSerializer(serializers.ModelSerializer):
     """Basic user serializer for read operation"""
+    
+    roles = serializers.SerializerMethodField()
+    permissions = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = "__all__"
+        fields = [
+            "id",
+            "email",
+            "first_name",
+            "last_name",
+            "phone",
+            "date_of_birth",
+            "is_superuser",
+            "is_active",
+            "is_staff",
+            "roles",
+            "permissions",
+            "date_joined",
+            "last_login",
+            "updated_at",
+        ]
+
+    def get_roles(self, obj):
+        user_roles = obj.user_roles.filter(is_active=True, role__is_active=True).select_related('role')
+        roles = [user_role.role for user_role in user_roles]
+        return RoleSimpleSerializer(roles, many=True).data
+    
+    def get_permissions(self, obj):
+        """
+        Returns a flat list of all unique permission code_names the user has
+        through their active roles.
+        """
+        # This query efficiently fetches all unique permission code_names
+        user_permissions = set(
+            obj.user_roles.filter(
+                is_active=True, role__is_active=True, role__permissions__is_active=True
+            ).values_list("role__permissions__code_name", flat=True)
+        )
+        return sorted(list(user_permissions))
+
+
+class UserUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = [
+            "email",
+            "first_name",
+            "last_name",
+            "phone",
+            "date_of_birth",
+            "is_superuser",
+            "is_active",
+            "is_staff",
+        ]
+
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
