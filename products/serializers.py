@@ -1,4 +1,6 @@
 from rest_framework import serializers
+
+from reviews.serializers import ListReviewSerializer
 from .models import Category, Product, ProductImage, ProductVarient
 from django.utils.text import slugify
 from core.utils.custom_slugify import slugify_name
@@ -149,10 +151,9 @@ class CategoryProductListSerializer(serializers.ModelSerializer):
 
 
 class ProductDetailSerializer(serializers.ModelSerializer):
-    # category = CategoryListSerializer(read_only=True)
     varients = ProductVarientSerializer(many=True, read_only=True)
     images = ProductImageSerializer(many=True, read_only=True)
-    # attributes = ProductAttributeSerializer(many=True, read_only=True)
+    reviews = ListReviewSerializer(many=True, read_only=True)
 
     class Meta:
         model = Product
@@ -162,7 +163,7 @@ class ProductDetailSerializer(serializers.ModelSerializer):
             "category",
             "varients",
             "images",
-            # "attributes",
+            "reviews",
             "additional_info",
             "description",
             "long_description",

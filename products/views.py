@@ -56,10 +56,7 @@ class ProductUpdateAPIView(generics.UpdateAPIView):
 
 
 class ProductDetailAPIView(generics.RetrieveAPIView):
-    queryset = Product.objects.select_related("category").prefetch_related(
-        "images", "varients"
-    )
-    # queryset = Product.objects.all()
+    queryset = Product.objects.prefetch_related("reviews","images", "varients")
     lookup_field = "pk"
     serializer_class = ProductDetailSerializer
 
