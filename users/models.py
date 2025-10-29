@@ -243,10 +243,6 @@ class Permission(models.Model):
 class Role(models.Model):
     """Role groups multiple permissions"""
 
-    def get_slug(self, name):
-        self.slug = slugify(name)
-        return self.slug
-
     name = models.CharField(max_length=100, unique=True)
     slug = models.CharField(max_length=100, unique=True, blank=True)
     description = models.TextField(max_length=255)

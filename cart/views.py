@@ -12,66 +12,117 @@ from .serializers import (
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.exceptions import NotFound, ValidationError
+from rest_framework.permissions import IsAuthenticated
+from core.permissions import HasPermissions
+from rest_framework.views import APIView
 
 
-class CartItemsListAPIView(generics.ListAPIView):
-    queryset = CartItem.objects.all()
+# only admin can list all the carts
+class CartListAPIView(APIView):
+    permission_classes = [IsAuthenticated, HasPermissions]
+    permissions_required = "can_manage_all_carts"
+
+    def get(self, request):
+        carts = Cart.objects.all()
+        serializer = CartSerializer(carts, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+# List cart items of the requesting user
+class CartItemsListAPIView(APIView):
     serializer_class = CartItemSerializer
+    permission_classes = [IsAuthenticated, HasPermissions]
+    permissions_required = ["can_manage_own_cart"]
 
-
-class CartListAPIView(generics.ListAPIView):
-    queryset = Cart.objects.all()
-    serializer_class = CartSerializer
-
-    def get_object(self):
-        return super().get_object()
-
-
-class CartItemAddAPIView(generics.CreateAPIView):
-    serializer_class = AddItemSerializer
-    queryset = CartItem.objects.all()
-
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        return Response(
-            serializer.data, status=status.HTTP_201_CREATED, headers=headers
-        )
-
-
-class CartItemQuantityUpdateAPIView(generics.UpdateAPIView):
-    serializer_class = UpdateCartItemQuantitySerializer
-    lookup_field = "pk"
-    queryset = CartItem.objects.all()
-
-    def perform_update(self, serializer):
+    def get(self, request):
         try:
+            # getting cart of the requesting user
+            cart = Cart.objects.get(user=request.user)
+        except Cart.DoesNotExist:
+            return Response([], status=status.HTTP_200_OK)
+
+        # items of the cart of that user
+        queryset = CartItem.objects.filter(cart=cart)
+        serializer = CartItemSerializer(queryset, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class CartItemAddAPIView(APIView):
+    serializer_class = AddItemSerializer
+    permission_classes = [IsAuthenticated, HasPermissions]
+    permissions_required = ["can_manage_own_cart"]
+
+    def post(self, request):
+        # context is a way to pass additional information to serializer.
+        # in this case, its used to get request user.
+        # i couldv'e done this in view itself but handeling things in serializer is cool ig.
+        serializer = AddItemSerializer(data=request.data, context={"request": request})
+        if serializer.is_valid():
             serializer.save()
-        except Exception as e:
-            raise ValidationError({"error": "Something went wrong."})
-        return super().perform_update(serializer)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class CartItemQuantityDeleteAPIView(generics.DestroyAPIView):
-    lookup_field = "pk"
-    queryset = CartItem.objects.all()
+class CartItemQuantityUpdateAPIView(APIView):
+    serializer_class = UpdateCartItemQuantitySerializer    
+    permission_classes = [IsAuthenticated, HasPermissions]
+    permissions_required = ["can_manage_own_cart"]
+    # This is needed in generics. not here
+    # lookup_field = "pk"
+
+    def patch(self, request, pk):
+        user = request.user
+        try:
+            cart_item = CartItem.objects.get(id=pk, cart__user=user)
+            print(cart_item)
+        except CartItem.DoesNotExist:
+            return Response(
+                "The CartItem doesn't exist or isn't owned by you.", status=status.HTTP_400_BAD_REQUEST
+            )
+        serializer = UpdateCartItemQuantitySerializer(
+            cart_item, data=request.data, partial=True
+        )
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class CartItemDeleteAPIView(APIView):
+    permission_classes = [IsAuthenticated, HasPermissions]
+    permissions_required = ["can_manage_own_cart"]
+
+    def delete(self, request, pk):
+        try:
+            cart_item = CartItem.objects.get(id=pk, cart__user=request.user)
+            print(cart_item)
+        except CartItem.DoesNotExist:
+            return Response(
+                "The CartItem doesn't exist or isn't owned by you.", status=status.HTTP_400_BAD_REQUEST
+            )
+        cart_item.delete()
+        return Response(f"The {cart_item.product.name} was deleted from cart.")
 
 
 class ListFavouriteAPIView(generics.ListAPIView):
     queryset = Favourite.objects.all()
     serializer_class = ListFavouriteSerializer
+    permission_classes = [IsAuthenticated, HasPermissions]
+    permissions_required = ["can_manage_own_cart"]
 
 
 class CreateFavouriteAPIView(generics.CreateAPIView):
     serializer_class = CreateFavouriteSerializer
+    permission_classes = [IsAuthenticated, HasPermissions]
+    permissions_required = ["can_manage_own_cart"]
 
 
 class DeleteFavouriteAPIView(generics.DestroyAPIView):
     queryset = Favourite.objects.all()
     lookup_field = "pk"
     serializer_class = RemoveFavouriteSerializer
+    permission_classes = [IsAuthenticated, HasPermissions]
+    permissions_required = ["can_manage_own_cart"]
 
     def get_queryset(self):
         return self.queryset.filter(user=self.request.user)

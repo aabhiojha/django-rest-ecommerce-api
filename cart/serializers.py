@@ -36,6 +36,7 @@ class CartItemSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         product = attrs.get("product")
         product_varient = attrs.get("product_varient")
+        print(attrs)
 
         if product_varient and product_varient.product != product:
             raise serializers.ValidationError(
@@ -63,41 +64,6 @@ class CartSerializer(serializers.ModelSerializer):
         return super().create(validated_data)
 
 
-# class AddItemSerializer(serializers.Serializer):
-#     product = serializers.PrimaryKeyRelatedField(queryset=Product.objects.all())
-#     product_varient = serializers.PrimaryKeyRelatedField(
-#         queryset=ProductVarient.objects.all(),
-#     )
-#     quantity = serializers.IntegerField(min_value=1, default=1)
-
-#     def validate(self, attrs):
-#         product = attrs.get("product")
-#         product_varient = attrs.get("product_varient")
-#         if product_varient and product_varient.product != product:
-#             raise serializers.ValidationError(
-#                 "Product varient must belong to the specified product"
-#             )
-#         return attrs
-
-#     def create(self, validated_data):
-#         user = self.context["request"].user
-#         product = validated_data["product"]
-#         product_varient = validated_data["product_varient"]
-#         quantity = validated_data["quantity"]
-
-#         cart, created = Cart.objects.get_or_create(user=user)
-
-#         cart_item, created = CartItem.objects.get_or_create(
-#             cart=cart,
-#             product=product,
-#             product_varient=product_varient,
-#             quantity=quantity,
-#         )
-
-#         cart_item.save()
-#         return cart_item
-
-
 class AddItemSerializer(serializers.ModelSerializer):
 
     product = serializers.PrimaryKeyRelatedField(queryset=Product.objects.all())
@@ -116,12 +82,26 @@ class AddItemSerializer(serializers.ModelSerializer):
         ]
 
     def create(self, validated_data):
+        print(validated_data)
         user = self.context["request"].user
+#         Sample Django request object attributes and example values:
+            # request.method: HTTP method like "GET" or "POST"
+            # request.path: URL path requested, e.g. "/example/path/"
+            # request.GET: Query parameters dictionary-like object, e.g. {"name": "John"}
+            # request.POST: POST form data dictionary-like object (if POST request)
+            # request.headers: Dictionary-like object with HTTP headers
+            # request.user: The currently authenticated user (or AnonymousUser)
+            # request.session: Session data dictionary-like object
+            # request.is_secure(): Boolean, True if request uses HTTPS
+            # request.FILES: Uploaded files dictionary (if any)
+        # print(self.context['request'].method)
         product = self.validated_data["product"]
         product_varient = self.validated_data["product_varient"]
         quantity = self.validated_data["quantity"]
         # suru ma ta cart chaiyooo of that user
         cart, created = Cart.objects.get_or_create(user=user)
+        if created:
+            print("Cart is created")
         # check if cartitem already exists
         cart_item, created = CartItem.objects.get_or_create(
             cart=cart,
@@ -137,8 +117,21 @@ class UpdateCartItemQuantitySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CartItem
-        fields = ["quantity"]
+        # takes only quantity
+        fields = [
+            "id",
+            "product",
+            "product_varient",
+            "quantity",
+            ]
+        read_only_fields = [
+            "id",
+            "product",
+            "product_varient",
+        ]
 
+    # def validate(self, attrs):
+    #     print(attrs)
 
 # favourite
 class ListFavouriteSerializer(serializers.ModelSerializer):
@@ -162,11 +155,6 @@ class CreateFavouriteSerializer(serializers.ModelSerializer):
             return favourite
         except Exception as e:
             raise serializers.ValidationError({"error": "Could not add to favorites."})
-
-    # def validate(self, attrs):
-    #     product = attrs["product"]
-
-    #     return super().validate(attrs)
 
 
 class RemoveFavouriteSerializer(serializers.ModelSerializer):
