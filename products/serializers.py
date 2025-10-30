@@ -212,7 +212,7 @@ class ProductCreateSerializer(serializers.ModelSerializer):
             for varient in varient_values:
                 created = ProductVarient.objects.create(product=product, **varient)
                 print(created)
-            return product
+        return product
 
 
 class ProductUpdateSerializer(serializers.ModelSerializer):
@@ -238,12 +238,23 @@ class ProductUpdateSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
-
     def update(self, instance, validated_data):
-        varient_data = validated_data.pop("varients")
-        validated_data = slugify_name(Product, validated_data=validated_data)
-        product = Product.objects.update(**validated_data)
-        # sku =
-        for varient in varient_data:
-            ProductVarient.objects.update(product=product, **varient)
-        return product
+        variant_data = validated_data.pop("varients", None)
+
+        # updating values in the product instance
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+
+        if "name" in validated_data and "slug" not in validated_data:
+            instance.slug = slugify_name(Product,validated_data)
+
+            instance.save()
+
+            if variant_data is not None:
+                instance.varients.all().delete()
+                if variant_data:
+                    ProductVarient.objects.bulk_create(
+                        [ProductVarient(product=instance, **item) for item in variant_data]
+                    )
+
+        return instance

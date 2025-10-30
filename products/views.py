@@ -2,6 +2,8 @@ from rest_framework import generics
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
+from core.permissions import HasPermissions
 
 # from rest_framework import filters
 # from django_filters.rest_framework import DjangoFilterBackend
@@ -21,19 +23,26 @@ from .pagination import ProductCursorPagination
 from .filters import ProductFilter
 
 
-class CategoryListCreateAPIView(generics.ListCreateAPIView):
+# class CategoryListCreateAPIView(generics.ListCreateAPIView):
+#     queryset = Category.objects.all()
+#     serializer_class = CategoryListSerializer
+
+
+class CategoryListAPIView(generics.ListAPIView):
     queryset = Category.objects.all()
     serializer_class = CategoryListSerializer
+
+
+class CategoryCreateAPIView(generics.CreateAPIView):
+    serializer_class = CategoryListSerializer
+    permission_classes = [IsAuthenticated, HasPermissions]
+    permissions_required = ["can_manage_all_products"]
 
 
 class CategoryDetailAPIView(generics.RetrieveAPIView):
     queryset = Category.objects.all()
     lookup_field = "pk"
     serializer_class = CategoryDetailSerializer
-
-
-class CategoryCreateAPIView(generics.CreateAPIView):
-    serializer_class = CategoryCreateSerializer
 
 
 # Product
@@ -47,22 +56,38 @@ class ProductListAPIView(generics.ListAPIView):
 
 class ProductCreateAPIView(generics.CreateAPIView):
     serializer_class = ProductCreateSerializer
+    permission_classes = [IsAuthenticated, HasPermissions]
+    permissions_required = ["can_create_products"]
+    
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
 
 
-class ProductUpdateAPIView(generics.UpdateAPIView):
-    queryset = Product.objects.all()
-    lookup_field = "pk"
+class ProductUpdateAPIView(APIView):
     serializer_class = ProductUpdateSerializer
+    permission_classes = [IsAuthenticated, HasPermissions]
+    permissions_required = ["can_edit_own_products"]
+
+    def patch(self, request, pk):
+        product_instance = Product.objects.get(id=pk, user=self.request.user)
+        serializer = ProductUpdateSerializer(product_instance,data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class ProductDetailAPIView(generics.RetrieveAPIView):
-    queryset = Product.objects.prefetch_related("reviews","images", "varients")
+    queryset = Product.objects.prefetch_related("reviews", "images", "varients")
     lookup_field = "pk"
     serializer_class = ProductDetailSerializer
+    permission_classes = [IsAuthenticated]
 
 
-class ProductFeaturedAPIView(generics.ListAPIView):
-    queryset = Product.objects.filter(is_featured=True)
-    serializer_class = ProductListSerializer
-    pagination_class = ProductCursorPagination
+class ProductDeleteAPIView(generics.DestroyAPIView):
+    lookup_field = "pk"
+    permission_classes = [IsAuthenticated, HasPermissions]
+    permissions_required = ["can_delete_own_products"]
 
+    def get_queryset(self):
+        return Product.objects.filter(user=self.request.user)
