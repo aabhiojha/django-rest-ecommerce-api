@@ -1,0 +1,26 @@
+meta {
+  name: ProductCreate
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://127.0.0.1:8000/product/create/
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "name":"1.51 kilo ko haat",
+    "price":"200",
+    "sku":"ghttt",
+    "category":87,
+    "varients":[]
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

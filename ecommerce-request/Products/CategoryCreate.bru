@@ -1,18 +1,18 @@
 meta {
-  name: Update Item Quantity
+  name: CategoryCreate
   type: http
-  seq: 3
+  seq: 4
 }
 
-patch {
-  url: http://127.0.0.1:8000/cart/item/update/7/
+post {
+  url: http://127.0.0.1:8000/product/category/create/
   body: json
   auth: inherit
 }
 
 body:json {
   {
-    
+      
   }
 }
 

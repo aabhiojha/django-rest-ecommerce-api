@@ -1,11 +1,11 @@
 meta {
-  name: Get the products
+  name: ProductDelete
   type: http
-  seq: 1
+  seq: 3
 }
 
-get {
-  url: http://127.0.0.1:8000/product/list/
+delete {
+  url: http://127.0.0.1:8000/product/delete/135/
   body: none
   auth: inherit
 }
