@@ -5,7 +5,6 @@ from django.contrib.auth.models import AbstractBaseUser
 
 from .managers import UserManager
 from .validators import validate_website, validate_phone
-import uuid
 from django.conf import settings
 from django.utils.text import slugify
 
@@ -21,6 +20,7 @@ class User(AbstractBaseUser):
     date_joined = models.DateTimeField(default=timezone.now)
     last_login = models.DateTimeField(null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True)
+    roles = models.ManyToManyField("Role", related_name="users")
 
     objects = UserManager()
 
@@ -45,27 +45,48 @@ class User(AbstractBaseUser):
         if self.is_superuser:
             return True
 
-        return self.user_roles.filter(
+        return self.roles.filter(
             is_active=True,
-            role__is_active=True,
-            role__permissions__code_name=permission_code,
-            role__permissions__is_active=True,
+            permissions__code_name=permission_code,
+            permissions__is_active=True,
         ).exists()
 
     def has_all_permissions(self, permission_codes):
+        """
+        Checks if the user has all permissions in a given list.
+        """
         if self.is_superuser:
             return True
 
         if not permission_codes:
             return True
 
+        # Get all unique permission codes from the user's active roles
         user_permissions = set(
-            self.user_roles.filter(
-                is_active=True, role__is_active=True, role__permissions__is_active=True
-            ).values_list("role__permissions__code_name", flat=True)
+            self.roles.filter(
+                is_active=True, permissions__is_active=True
+            ).values_list("permissions__code_name", flat=True)
         )
-
         return all(perm in user_permissions for perm in permission_codes)
+
+    def has_module_perms(self, app_label):
+        """
+        Return True if the user has any permissions in the given app label.
+        """
+        if self.is_active and self.is_superuser:
+            return True
+        
+        # For staff users, grant access to admin modules
+        if self.is_active and self.is_staff:
+            return True
+        
+        # Check if user has any permission for this app's models
+        return self.roles.filter(
+            is_active=True,
+            permissions__is_active=True,
+            permissions__category__slug__startswith=app_label,
+        ).exists()
+
 
     # error was
     # AttributeError at /admin/
@@ -278,34 +299,34 @@ class Role(models.Model):
         ).exists()
 
 
-class UserRole(models.Model):
-    """
-    Association between Users and Roles
-    say Linking table between Users and Roles
-    """
+# class UserRole(models.Model):
+#     """
+#     Association between Users and Roles
+#     say Linking table between Users and Roles
+#     """
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="user_roles")
-    role = models.ForeignKey(Role, on_delete=models.CASCADE, related_name="user_roles")
-    assigned_by = models.ForeignKey(
-        User,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="assigned_roles",
-    )
+#     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="user_roles")
+#     role = models.ForeignKey(Role, on_delete=models.CASCADE, related_name="user_roles")
+#     assigned_by = models.ForeignKey(
+#         User,
+#         on_delete=models.SET_NULL,
+#         null=True,
+#         blank=True,
+#         related_name="assigned_roles",
+#     )
 
-    is_active = models.BooleanField(default=True)
+#     is_active = models.BooleanField(default=True)
 
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+#     created_at = models.DateTimeField(auto_now_add=True)
+#     updated_at = models.DateTimeField(auto_now=True)
 
-    class Meta:
-        verbose_name = "User Role"
-        verbose_name_plural = "User Roles"
-        unique_together = ["user", "role"]
+#     class Meta:
+#         verbose_name = "User Role"
+#         verbose_name_plural = "User Roles"
+#         unique_together = ["user", "role"]
 
-    def __str__(self):
-        return f"{self.user.email} - {self.role.name}"
+#     def __str__(self):
+#         return f"{self.user.email} - {self.role.name}"
 
 
 class OTP(models.Model):

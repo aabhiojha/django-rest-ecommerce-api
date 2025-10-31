@@ -8,7 +8,6 @@ from .models import (
     PermissionCategory,
     Permission,
     Role,
-    UserRole,
 )
 
 admin.site.register(User)
@@ -17,4 +16,3 @@ admin.site.register(Address)
 admin.site.register(PermissionCategory) 
 admin.site.register(Permission)
 admin.site.register(Role)
-admin.site.register(UserRole)

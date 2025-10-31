@@ -34,5 +34,5 @@ urlpatterns = [
     path("role/<int:pk>/", views.RoleCRUDView.as_view()),
     # User-Role assignment    
     path("user/role/assign/", views.UserRoleAssignView.as_view()),
-    path("user/role/list/", views.UserRoleListView.as_view()),
+    # path("user/role/list/", views.UserRoleListView.as_view()),
 ]

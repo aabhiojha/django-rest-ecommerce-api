@@ -7,7 +7,6 @@ from .models import (
     User,
     UserProfile,
     Address,
-    UserRole,
 )
 
 # base serializer: look into
@@ -291,29 +290,19 @@ class RoleListSerializer(serializers.ModelSerializer):
 
 class UserRoleCreateSerializer(serializers.ModelSerializer):
     class Meta:
-        model = UserRole
-        fields = "__all__"
-
-
-class UserRoleListSerializer(serializers.ModelSerializer):
-    # permission = PermissionSerializer()
-    role = RoleListSerializer()
-    # permission_required = "can_manage_roles"
-
-    class Meta:
-        model = UserRole
+        model = User
         fields = [
-            "user",
             "role",
-            "assigned_by",
+            "id"
         ]
+
 
 
 # Only for listing purpose serializer
 class UserListSerializer(serializers.ModelSerializer):
     """Basic user serializer for read operation"""
     
-    roles = serializers.SerializerMethodField()
+    roles = RoleSimpleSerializer(many=True, read_only=True)
     permissions = serializers.SerializerMethodField()
 
     class Meta:
@@ -335,11 +324,6 @@ class UserListSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
 
-    def get_roles(self, obj):
-        user_roles = obj.user_roles.filter(is_active=True, role__is_active=True).select_related('role')
-        roles = [user_role.role for user_role in user_roles]
-        return RoleSimpleSerializer(roles, many=True).data
-    
     def get_permissions(self, obj):
         """
         Returns a flat list of all unique permission code_names the user has
@@ -347,9 +331,9 @@ class UserListSerializer(serializers.ModelSerializer):
         """
         # This query efficiently fetches all unique permission code_names
         user_permissions = set(
-            obj.user_roles.filter(
-                is_active=True, role__is_active=True, role__permissions__is_active=True
-            ).values_list("role__permissions__code_name", flat=True)
+            obj.roles.filter(
+                is_active = True, role__permissions__is_active=True
+            ).values_list("permissions__code_name", flat=True)
         )
         return sorted(list(user_permissions))
 
@@ -432,3 +416,27 @@ class UserDetailSerializer(serializers.ModelSerializer):
 
         instance.refresh_from_db()
         return instance
+
+
+class UserRoleAssignSerializer(serializers.ModelSerializer):
+    roles = serializers.PrimaryKeyRelatedField(
+        many=True, queryset=Role.objects.all()
+    )
+    
+    class Meta:
+        model = User
+        fields = [
+            "id",
+            "roles"
+        ]
+
+        # roles can be a list for a user
+        # can assign multiple roles at once
+        # M:M relationship with user and role
+
+    def update(self, instance, validated_data):
+        roles = validated_data.pop("roles", None)
+        if roles is not None:
+            instance.roles.set(roles)
+            instance.set()
+        return super().update(instance, validated_data)

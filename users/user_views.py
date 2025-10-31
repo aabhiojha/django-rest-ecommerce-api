@@ -5,7 +5,7 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import generics
 
-from users.models import User, UserProfile
+from users.models import User
 from core.email import welcome_mail
 
 from .serializers import UserDetailSerializer, UserListSerializer, UserCreateSerializer, UserUpdateSerializer

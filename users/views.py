@@ -13,16 +13,15 @@ from .serializers import (
     PermissionListSerializer,
     RoleCreateSerializer,
     RoleListSerializer,
-    UserRoleCreateSerializer,
     PermissionCategoryListSerializer,
     PermissionCategoryCreateSerializer,
+    UserRoleAssignSerializer,
 )
 from rest_framework.permissions import IsAuthenticated
 from core.permissions import HasPermissions
 
 
-from .models import Role, User, OTP, UserRole, Permission, PermissionCategory
-from .serializers import UserRoleListSerializer
+from .models import Role, User, OTP, Permission, PermissionCategory
 
 from .utils import generate_otp
 from core.email import send_otp
@@ -314,24 +313,14 @@ class RoleCRUDView(APIView):
 class UserRoleAssignView(APIView):
     """Assigns User with Role"""
 
-    serializer_class = UserRoleCreateSerializer
+    serializer_class = UserRoleAssignSerializer
     permission_classes = [IsAuthenticated, HasPermissions]
     permissions_required = "can_manage_roles"
 
-    def post(self, request):
-        serializer = UserRoleCreateSerializer(data=request.data)
+    def patch(self, request, pk):
+        user = User.objects.get(pk=pk)
+        serializer = UserRoleAssignSerializer(user, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-class UserRoleListView(APIView):
-    """Lists the roles a user has"""
-
-    serializer_class = UserRoleListSerializer
-
-    def get(self, request):
-        user_roles = UserRole.objects.all()
-        serializer = UserRoleListSerializer(user_roles, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
