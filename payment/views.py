@@ -167,12 +167,19 @@ def stripe_webhook(request):
                     payment.status = "completed"
                     payment.save()
 
+
                     # need to make cart item's is_paid flag True
                     order_items = order.order_items.all()
                     for order_item in order_items:
                         cart_item = order_item.item
+                        product = cart_item.product
                         cart_item.is_paid = True
+                        print(cart_item)
+                        product.quantity -= order_item.quantity
+                        print(product.quantity)
                         cart_item.save()
+                        product.save(update_fields=["quantity"])
+
 
                     # send email to customer
                     send_payment_receipt(order.user, order, payment)
