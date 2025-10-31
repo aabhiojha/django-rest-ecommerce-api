@@ -1,321 +1,362 @@
-from django.core.management.base import BaseCommand
-from django.utils.text import slugify
-from products.models import (
-    Category,
-    Product,
-    ProductVarient,
-    ProductImage,
-)
 import random
 from decimal import Decimal
-from faker import Faker
+from django.core.management.base import BaseCommand
+from django.core.files.base import ContentFile
+from django.utils.text import slugify
+from products.models import Category, Product, ProductVarient, ProductImage
+from users.models import User
 
 
 class Command(BaseCommand):
-    help = "Populate the database with sample product data"
-
-    def __init__(self):
-        super().__init__()
-        self.faker = Faker()
+    help = 'Populates the database with sample product data including categories, products, variants, and images'
 
     def add_arguments(self, parser):
         parser.add_argument(
-            "--clear",
-            action="store_true",
-            help="Clear existing data before populating",
+            '--clear',
+            action='store_true',
+            help='Clear existing product data before populating',
         )
         parser.add_argument(
-            "--count",
+            '--categories',
             type=int,
-            default=100,
-            help="Number of products to create (default: 100)",
+            default=10,
+            help='Number of categories to create (default: 10)',
+        )
+        parser.add_argument(
+            '--products',
+            type=int,
+            default=50,
+            help='Number of products to create (default: 50)',
         )
 
     def handle(self, *args, **options):
-        if options["clear"]:
-            self.stdout.write(self.style.WARNING("Clearing existing data..."))
+        clear_data = options['clear']
+        num_categories = options['categories']
+        num_products = options['products']
+
+        if clear_data:
+            self.stdout.write(self.style.WARNING('Clearing existing product data...'))
             ProductImage.objects.all().delete()
             ProductVarient.objects.all().delete()
             Product.objects.all().delete()
             Category.objects.all().delete()
-            self.stdout.write(self.style.SUCCESS("Data cleared!"))
+            self.stdout.write(self.style.SUCCESS('✓ Cleared existing data'))
 
-        self.stdout.write(self.style.SUCCESS("Creating sample data..."))
+        # Get or create a default user for products
+        user = self._get_or_create_default_user()
 
         # Create categories
-        # self.create_categories()
+        self.stdout.write('Creating categories...')
+        categories = self._create_categories(num_categories)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(categories)} categories'))
 
         # Create products
-        self.create_products(count=options.get("count", 100))
+        self.stdout.write('Creating products...')
+        products = self._create_products(num_products, categories, user)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(products)} products'))
 
         # Create product variants
-        self.create_product_variants()
-
-        # Create product attributes
-        self.create_product_attributes()
+        self.stdout.write('Creating product variants...')
+        variants_count = self._create_product_variants(products)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {variants_count} product variants'))
 
         # Create product images
-        self.create_product_images()
+        self.stdout.write('Creating product images...')
+        images_count = self._create_product_images(products)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {images_count} product images'))
 
-        self.stdout.write(self.style.SUCCESS("Sample data created successfully!"))
+        self.stdout.write(self.style.SUCCESS('\n✅ Successfully populated product data!'))
 
-    def create_categories(self):
-        """Create sample categories"""
+    def _get_or_create_default_user(self):
+        """Get or create a default user for products"""
+        user, created = User.objects.get_or_create(
+            email='seller@example.com',
+            defaults={
+                'first_name': 'Default',
+                'last_name': 'Seller',
+                'is_staff': True,
+                'is_active': True,
+            }
+        )
+        if created:
+            user.set_password('password123')
+            user.save()
+            self.stdout.write(self.style.SUCCESS('✓ Created default seller user'))
+        else:
+            self.stdout.write(self.style.SUCCESS('✓ Using existing seller user'))
+        return user
+
+    def _create_categories(self, num_categories):
+        """Create sample categories with parent-child relationships"""
         categories_data = [
+            {'name': 'Electronics', 'description': 'Electronic devices and accessories'},
+            {'name': 'Smartphones', 'description': 'Mobile phones and accessories', 'parent': 'Electronics'},
+            {'name': 'Laptops', 'description': 'Laptop computers and accessories', 'parent': 'Electronics'},
+            {'name': 'Headphones', 'description': 'Audio devices', 'parent': 'Electronics'},
+            {'name': 'Clothing', 'description': 'Apparel and fashion'},
+            {'name': 'Men\'s Clothing', 'description': 'Clothing for men', 'parent': 'Clothing'},
+            {'name': 'Women\'s Clothing', 'description': 'Clothing for women', 'parent': 'Clothing'},
+            {'name': 'Home & Kitchen', 'description': 'Home appliances and kitchenware'},
+            {'name': 'Furniture', 'description': 'Home and office furniture', 'parent': 'Home & Kitchen'},
+            {'name': 'Books', 'description': 'Books and literature'},
+            {'name': 'Sports & Outdoors', 'description': 'Sports equipment and outdoor gear'},
+            {'name': 'Toys & Games', 'description': 'Toys and games for all ages'},
+            {'name': 'Beauty & Personal Care', 'description': 'Beauty products and personal care items'},
+            {'name': 'Automotive', 'description': 'Car accessories and parts'},
+            {'name': 'Health & Wellness', 'description': 'Health and wellness products'},
+        ]
+
+        categories = {}
+        created_categories = []
+
+        # First pass: Create parent categories
+        for idx, cat_data in enumerate(categories_data[:num_categories]):
+            if 'parent' not in cat_data:
+                category = Category.objects.create(
+                    name=cat_data['name'],
+                    description=cat_data['description'],
+                    sort_order=idx
+                )
+                categories[cat_data['name']] = category
+                created_categories.append(category)
+
+        # Second pass: Create child categories
+        for idx, cat_data in enumerate(categories_data[:num_categories]):
+            if 'parent' in cat_data and cat_data['parent'] in categories:
+                category = Category.objects.create(
+                    name=cat_data['name'],
+                    description=cat_data['description'],
+                    parent=categories[cat_data['parent']],
+                    sort_order=idx
+                )
+                categories[cat_data['name']] = category
+                created_categories.append(category)
+
+        return created_categories
+
+    def _create_products(self, num_products, categories, user):
+        """Create sample products"""
+        products_templates = [
             {
-                "name": "Electronics",
-                "description": "Electronic devices and gadgets",
-                "sort_order": 1,
-                "children": [
-                    {
-                        "name": "Smartphones",
-                        "description": "Mobile phones and accessories",
-                    },
-                    {
-                        "name": "Laptops",
-                        "description": "Laptop computers and accessories",
-                    },
-                    {
-                        "name": "Tablets",
-                        "description": "Tablet computers and accessories",
-                    },
-                    {
-                        "name": "Audio",
-                        "description": "Headphones, speakers, and audio equipment",
-                    },
-                ],
+                'name': 'iPhone 15 Pro',
+                'description': 'Latest Apple smartphone with titanium design',
+                'long_description': 'The iPhone 15 Pro features a stunning titanium design, A17 Pro chip, and advanced camera system.',
+                'price': Decimal('999.99'),
+                'brand': 'Apple',
+                'category': 'Smartphones',
             },
             {
-                "name": "Clothing",
-                "description": "Fashion and apparel",
-                "sort_order": 2,
-                "children": [
-                    {"name": "Men's Clothing", "description": "Clothing for men"},
-                    {"name": "Women's Clothing", "description": "Clothing for women"},
-                    {"name": "Shoes", "description": "Footwear for all"},
-                    {"name": "Accessories", "description": "Fashion accessories"},
-                ],
+                'name': 'Samsung Galaxy S24 Ultra',
+                'description': 'Premium Android smartphone with S Pen',
+                'long_description': 'Galaxy S24 Ultra combines powerful performance with innovative AI features and a brilliant display.',
+                'price': Decimal('1199.99'),
+                'brand': 'Samsung',
+                'category': 'Smartphones',
             },
             {
-                "name": "Home & Garden",
-                "description": "Home improvement and garden supplies",
-                "sort_order": 3,
-                "children": [
-                    {"name": "Furniture", "description": "Home furniture"},
-                    {"name": "Kitchen", "description": "Kitchen appliances and tools"},
-                    {"name": "Garden", "description": "Gardening tools and supplies"},
-                ],
+                'name': 'MacBook Pro 16"',
+                'description': 'Powerful laptop for professionals',
+                'long_description': 'MacBook Pro with M3 Max chip delivers exceptional performance for demanding workflows.',
+                'price': Decimal('2499.99'),
+                'brand': 'Apple',
+                'category': 'Laptops',
             },
             {
-                "name": "Books",
-                "description": "Books and educational materials",
-                "sort_order": 4,
-                "children": [
-                    {"name": "Fiction", "description": "Fiction books"},
-                    {"name": "Non-Fiction", "description": "Non-fiction books"},
-                    {"name": "Textbooks", "description": "Educational textbooks"},
-                ],
+                'name': 'Dell XPS 15',
+                'description': 'Premium Windows laptop',
+                'long_description': 'Dell XPS 15 features stunning InfinityEdge display and powerful Intel processors.',
+                'price': Decimal('1799.99'),
+                'brand': 'Dell',
+                'category': 'Laptops',
+            },
+            {
+                'name': 'Sony WH-1000XM5',
+                'description': 'Premium noise cancelling headphones',
+                'long_description': 'Industry-leading noise cancellation with exceptional sound quality and comfort.',
+                'price': Decimal('399.99'),
+                'brand': 'Sony',
+                'category': 'Headphones',
+            },
+            {
+                'name': 'Men\'s Cotton T-Shirt',
+                'description': 'Comfortable casual t-shirt',
+                'long_description': '100% cotton t-shirt perfect for everyday wear.',
+                'price': Decimal('19.99'),
+                'brand': 'Generic',
+                'category': 'Men\'s Clothing',
+            },
+            {
+                'name': 'Women\'s Summer Dress',
+                'description': 'Elegant floral summer dress',
+                'long_description': 'Beautiful floral print dress perfect for summer occasions.',
+                'price': Decimal('49.99'),
+                'brand': 'Fashion Co',
+                'category': 'Women\'s Clothing',
+            },
+            {
+                'name': 'Office Chair Pro',
+                'description': 'Ergonomic office chair',
+                'long_description': 'Comfortable ergonomic chair with lumbar support for long work hours.',
+                'price': Decimal('299.99'),
+                'brand': 'OfficeMax',
+                'category': 'Furniture',
+            },
+            {
+                'name': 'Stainless Steel Cookware Set',
+                'description': '10-piece cookware set',
+                'long_description': 'Professional-grade stainless steel cookware for your kitchen.',
+                'price': Decimal('199.99'),
+                'brand': 'KitchenPro',
+                'category': 'Home & Kitchen',
+            },
+            {
+                'name': 'Fiction Novel - "The Journey"',
+                'description': 'Bestselling fiction novel',
+                'long_description': 'An epic tale of adventure and self-discovery.',
+                'price': Decimal('14.99'),
+                'brand': 'Publisher Inc',
+                'category': 'Books',
+            },
+            {
+                'name': 'Yoga Mat Premium',
+                'description': 'Non-slip exercise mat',
+                'long_description': 'Extra thick yoga mat with superior grip and cushioning.',
+                'price': Decimal('39.99'),
+                'brand': 'FitLife',
+                'category': 'Sports & Outdoors',
+            },
+            {
+                'name': 'LEGO Creator Set',
+                'description': 'Building blocks set for kids',
+                'long_description': 'Creative building set with 500+ pieces for endless fun.',
+                'price': Decimal('59.99'),
+                'brand': 'LEGO',
+                'category': 'Toys & Games',
+            },
+            {
+                'name': 'Face Moisturizer SPF 30',
+                'description': 'Daily face cream with sun protection',
+                'long_description': 'Hydrating moisturizer with broad spectrum SPF 30 protection.',
+                'price': Decimal('24.99'),
+                'brand': 'BeautyGlow',
+                'category': 'Beauty & Personal Care',
+            },
+            {
+                'name': 'Car Phone Holder',
+                'description': 'Universal dashboard mount',
+                'long_description': 'Secure phone holder for hands-free navigation.',
+                'price': Decimal('15.99'),
+                'brand': 'AutoTech',
+                'category': 'Automotive',
+            },
+            {
+                'name': 'Vitamin D3 Supplements',
+                'description': 'Daily vitamin supplement',
+                'long_description': 'High-potency vitamin D3 for bone and immune health.',
+                'price': Decimal('12.99'),
+                'brand': 'HealthPlus',
+                'category': 'Health & Wellness',
             },
         ]
 
-        for cat_data in categories_data:
-            parent_category = Category.objects.create(
-                name=cat_data["name"],
-                slug=slugify(cat_data["name"]),
-                description=cat_data["description"],
-                sort_order=cat_data["sort_order"],
-            )
-            self.stdout.write(f"Created parent category: {parent_category.name}")
+        # Create category name to object mapping
+        category_map = {cat.name: cat for cat in categories}
 
-            for child_data in cat_data.get("children", []):
-                child_category = Category.objects.create(
-                    name=child_data["name"],
-                    slug=slugify(child_data["name"]),
-                    description=child_data["description"],
-                    parent=parent_category,
-                    sort_order=0,
-                )
-                self.stdout.write(f"  Created child category: {child_category.name}")
+        products = []
+        for i in range(num_products):
+            template = products_templates[i % len(products_templates)]
+            
+            # Get category or use random if not found
+            category = category_map.get(template['category'])
+            if not category:
+                category = random.choice(categories)
 
-    def generate_product_name(self, category_name):
-        """Generate realistic product names based on category"""
-        category_templates = {
-            "Smartphones": ["Pro", "Max", "Ultra", "Plus", "Mini", "Lite"],
-            "Laptops": ["Pro", "Air", "Book", "Elite", "Spectre", "Pavilion"],
-            "Audio": ["Pro", "Studio", "Max", "Buds", "Elite", "Premium"],
-            "Shoes": ["Air", "Boost", "Zoom", "Runner", "Sport", "Classic"],
-            "Men's Clothing": ["Classic", "Premium", "Essential", "Modern", "Vintage"],
-            "Women's Clothing": ["Classic", "Premium", "Essential", "Modern", "Vintage"],
-            "Furniture": ["Modern", "Classic", "Deluxe", "Comfort", "Premium"],
-            "Fiction": self.faker.catch_phrase(),
-            "Non-Fiction": self.faker.catch_phrase(),
-        }
-        
-        brand_prefix = self.faker.company().split()[0]
-        template = random.choice(category_templates.get(category_name, ["Series"]))
-        
-        if "Clothing" in category_name or "Shoes" in category_name:
-            return f"{brand_prefix} {template} {random.choice(['Shirt', 'Pants', 'Jacket', 'Dress', 'Sneakers'])} {random.randint(100, 999)}"
-        elif "Book" in category_name or category_name in ["Fiction", "Non-Fiction"]:
-            return self.faker.catch_phrase()
-        else:
-            return f"{brand_prefix} {category_name[:-1] if category_name.endswith('s') else category_name} {template} {random.randint(100, 999)}"
-    
-    def generate_price(self, parent_category):
-        """Generate realistic prices based on parent category"""
-        price_ranges = {
-            "Electronics": (299.99, 2999.99),
-            "Clothing": (19.99, 199.99),
-            "Home & Garden": (49.99, 999.99),
-            "Books": (9.99, 49.99),
-        }
-        
-        min_price, max_price = price_ranges.get(parent_category, (19.99, 199.99))
-        price = round(random.uniform(min_price, max_price), 2)
-        return Decimal(str(price))
+            # Generate unique SKU
+            sku = f"{template['brand'][:3].upper()}-{random.randint(1000, 9999)}-{i}"
 
-    def create_products(self, count=100):
-        """Create sample products dynamically using existing categories"""
-        categories = Category.objects.filter(parent__isnull=False)
-        
-        if not categories.exists():
-            self.stdout.write(self.style.ERROR("No child categories found. Please create categories first."))
-            return
-        
-        self.stdout.write(f"Creating {count} products...")
-        
-        for i in range(count):
-            category = random.choice(categories)
-            parent_category = category.parent.name if category.parent else category.name
-            
-            product_name = self.generate_product_name(category.name)
-            price = self.generate_price(parent_category)
-            
-            # Generate SKU
-            sku_prefix = ''.join([c for c in product_name if c.isupper()])[:5]
-            sku = f"{sku_prefix}{random.randint(1000, 9999)}"
-            
-            # Make SKU unique
-            while Product.objects.filter(sku=sku).exists():
-                sku = f"{sku_prefix}{random.randint(1000, 9999)}"
-            
+            # Add variation to price for different instances
+            price_variation = Decimal(random.uniform(-0.1, 0.1))
+            adjusted_price = template['price'] * (1 + price_variation)
+
             product = Product.objects.create(
-                name=product_name,
-                slug=slugify(product_name),
-                description=self.faker.sentence(nb_words=10),
-                long_description=self.faker.paragraph(nb_sentences=5),
-                price=price,
-                sku=sku,
-                brand=self.faker.company(),
+                name=f"{template['name']}" if i < len(products_templates) else f"{template['name']} - Model {i}",
+                user=user,
                 category=category,
-                is_featured=random.choice([True, False]) if random.random() < 0.2 else False,
-                is_digital=True if parent_category == "Books" else False,
-                weight=Decimal(str(round(random.uniform(0.1, 5.0), 2))),
-                dimensions=f"{random.randint(100, 400)} x {random.randint(50, 300)} x {random.randint(5, 100)} mm",
+                description=template['description'],
+                long_description=template['long_description'],
+                price=round(adjusted_price, 2),
+                sku=sku,
+                brand=template['brand'],
+                quantity=random.randint(10, 500),
+                weight=Decimal(random.uniform(0.1, 5.0)),
+                dimensions=f"{random.randint(5, 30)}x{random.randint(5, 30)}x{random.randint(2, 15)} cm",
+                is_featured=random.choice([True, False]),
+                is_digital=random.choice([True, False]) if 'Book' in template['name'] or 'Software' in template['name'] else False,
+                additional_info={
+                    'color': random.choice(['Black', 'White', 'Silver', 'Blue', 'Red']),
+                    'material': random.choice(['Plastic', 'Metal', 'Cotton', 'Wood', 'Glass']),
+                    'warranty': f"{random.randint(1, 3)} years",
+                }
             )
-            
-            if (i + 1) % 20 == 0:
-                self.stdout.write(f"Created {i + 1} products...")
-        
-        self.stdout.write(self.style.SUCCESS(f"Created {count} products successfully!"))
+            products.append(product)
 
-    def create_product_variants(self):
-        """Create product variants"""
-        products = Product.objects.all()
-        
+        return products
+
+    def _create_product_variants(self, products):
+        """Create product variants for some products"""
         variant_options = {
-            "Electronics": {
-                "Storage": ["64GB", "128GB", "256GB", "512GB", "1TB"],
-                "Color": ["Black", "White", "Silver", "Gold", "Blue", "Red"],
-            },
-            "Clothing": {
-                "Size": ["XS", "S", "M", "L", "XL", "XXL"],
-                "Color": ["Black", "White", "Blue", "Red", "Green", "Grey"],
-            },
-            "Shoes": {
-                "Size": ["7", "8", "9", "10", "11", "12"],
-                "Color": ["Black", "White", "Blue", "Red"],
-            },
+            'color': ['Black', 'White', 'Silver', 'Blue', 'Red', 'Gold'],
+            'size': ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
+            'storage': ['64GB', '128GB', '256GB', '512GB', '1TB'],
+            'memory': ['8GB', '16GB', '32GB', '64GB'],
         }
 
-        for product in products:
-            parent_category = product.category.parent.name if product.category.parent else product.category.name
-            
-            # 70% of products get variants
-            if random.random() < 0.7:
-                category_variants = variant_options.get(parent_category, {})
+        variants_count = 0
+        # Create variants for about 30% of products
+        for product in random.sample(products, k=int(len(products) * 0.3)):
+            # Decide which variant type to use
+            if 'phone' in product.name.lower() or 'laptop' in product.name.lower():
+                variant_type = 'storage'
+                options = variant_options['storage'][:3]
+            elif 'clothing' in str(product.category).lower() or 'shirt' in product.name.lower() or 'dress' in product.name.lower():
+                variant_type = 'size'
+                options = variant_options['size'][:4]
+            else:
+                variant_type = 'color'
+                options = variant_options['color'][:3]
+
+            # Create 2-4 variants per product
+            for option in options[:random.randint(2, 4)]:
+                price_adjustment = Decimal(random.uniform(-0.15, 0.15))
+                variant_price = product.price * (1 + price_adjustment)
                 
-                if category_variants:
-                    variant_type = random.choice(list(category_variants.keys()))
-                    options = category_variants[variant_type]
-                    
-                    for i, option in enumerate(random.sample(options, min(3, len(options)))):
-                        price_variation = Decimal(str(random.uniform(-10, 50)))
-                        ProductVarient.objects.create(
-                            product=product,
-                            name=f"{variant_type}: {option}",
-                            sku=f"{product.sku}-{option.replace(' ', '')}",
-                            price=product.price + price_variation,
-                        )
+                ProductVarient.objects.create(
+                    product=product,
+                    name=f"{variant_type.capitalize()}: {option}",
+                    sku=f"{product.sku}-{option[:3].upper()}",
+                    price=round(variant_price, 2)
+                )
+                variants_count += 1
 
-        self.stdout.write("Created product variants")
+        return variants_count
 
-    def create_product_attributes(self):
-        """Create product attributes using additional_info JSON field"""
-        products = Product.objects.all()
-
-        attribute_data = {
-            "Electronics": {
-                "Color": ["Black", "White", "Silver", "Gold", "Blue"],
-                "Warranty": ["1 Year", "2 Years"],
-                "Connectivity": ["WiFi", "Bluetooth", "5G", "USB-C"],
-            },
-            "Clothing": {
-                "Material": ["Cotton", "Polyester", "Leather", "Denim"],
-                "Color": ["Black", "White", "Blue", "Red", "Green"],
-                "Care Instructions": ["Machine Wash", "Hand Wash", "Dry Clean"],
-            },
-            "Home & Garden": {
-                "Material": ["Wood", "Metal", "Plastic", "Glass"],
-                "Color": ["White", "Black", "Brown", "Natural"],
-                "Assembly Required": ["Yes", "No"],
-            },
-            "Books": {
-                "Format": ["Paperback", "Hardcover", "E-book"],
-                "Language": ["English", "Spanish", "French"],
-                "Pages": ["200-300", "300-400", "400+"],
-            },
-        }
-
-        for product in products:
-            parent_category = product.category.parent or product.category
-            category_attrs = attribute_data.get(parent_category.name, {})
-            
-            additional_info = {}
-            for attr_name, attr_values in category_attrs.items():
-                additional_info[attr_name] = random.choice(attr_values)
-            
-            if additional_info:
-                product.additional_info = additional_info
-                product.save()
-
-        self.stdout.write("Created product attributes")
-
-    def create_product_images(self):
+    def _create_product_images(self, products):
         """Create placeholder product images"""
-        products = Product.objects.all()
-
+        images_count = 0
+        
         for product in products:
-            # Create 2-4 images per product
-            num_images = random.randint(2, 4)
-
+            # Create 1-4 images per product
+            num_images = random.randint(1, 4)
+            
             for i in range(num_images):
                 ProductImage.objects.create(
                     product=product,
-                    image=f"products/placeholder_{product.id}_{i+1}.jpg",
                     alt_text=f"{product.name} - Image {i+1}",
                     is_primary=(i == 0),  # First image is primary
-                    sort_order=i,
+                    sort_order=i
+                    # Note: image field is left empty as we're creating sample data
+                    # In production, you would upload actual images
                 )
+                images_count += 1
 
-        self.stdout.write("Created product images")
+        return images_count

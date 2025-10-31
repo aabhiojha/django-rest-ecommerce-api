@@ -37,7 +37,7 @@ class Product(BaseModel):
         related_name="products",
         null=True,
         blank=True,
-    )
+    ) 
     description = models.TextField(default="", help_text="Short Description")
     long_description = models.TextField(
         blank=True, default="", help_text="Long Description"
@@ -48,6 +48,7 @@ class Product(BaseModel):
     # stock keeping unit (nike shoes 11 red -> nike-sho-11-r)
     sku = models.CharField(max_length=100, unique=True)
     brand = models.CharField(blank=True, default="")
+    quantity = models.BigIntegerField(default=1)
     weight = models.DecimalField(max_digits=8, decimal_places=2, default=0.00)
     dimensions = models.CharField(max_length=100, blank=True)
     is_featured = models.BooleanField(default=False)
