@@ -1,11 +1,11 @@
 meta {
-  name: ProductUpdate
+  name: Get my_list
   type: http
-  seq: 4
+  seq: 1
 }
 
-patch {
-  url: 127.0.0.1:8000/product/update/10/
+get {
+  url: 127.0.0.1:8000/product/my_list/
   body: none
   auth: inherit
 }

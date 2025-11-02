@@ -4,10 +4,16 @@ meta {
   seq: 1
 }
 
-post {
-  url: http://127.0.0.1:8000/user/role/assign/
+patch {
+  url: http://127.0.0.1:8000/user/role/assign/5/
   body: json
   auth: inherit
+}
+
+body:json {
+  {
+  "roles":[3]
+  }
 }
 
 settings {

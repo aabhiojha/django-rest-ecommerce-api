@@ -1,0 +1,22 @@
+meta {
+  name: reply to review
+  type: http
+  seq: 3
+}
+
+post {
+  url: 127.0.0.1:8000/reviews/reply/3/
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "message":"Sorry for the inconvenience. Store ma lyaunus."
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

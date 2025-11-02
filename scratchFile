@@ -1,0 +1,53 @@
+#   permissions_structure = {
+#     "User Management": [
+#         # admin
+#         {"name": "View All Users", "code_name": "can_view_users"},
+#         {"name": "Edit Any User", "code_name": "can_edit_users"},
+#         {"name": "Delete Users", "code_name": "can_delete_users"},
+#         {"name": "Ban/Suspend Users", "code_name": "can_ban_users"},
+#     ],
+#     "Product Management": [
+#         # seller
+#         {"name": "View Own Products", "code_name": "can_view_own_products"},
+#         {"name": "Create Products", "code_name": "can_create_products"},
+#         {"name": "Edit Own Products", "code_name": "can_edit_own_products"},
+#         {"name": "Delete Own Products", "code_name": "can_delete_own_products"},
+#         # admin
+#         {"name": "Manage All Products", "code_name": "can_manage_all_products"},
+#         {"name": "Manage Categories", "code_name": "can_manage_categories"},
+#     ],
+#     "Order Management": [
+#         # customer
+#         {"name": "Place Orders", "code_name": "can_place_orders"},
+#         {"name": "View Own Orders", "code_name": "can_view_own_orders"},
+#         {"name": "Cancel Own Orders", "code_name": "can_cancel_own_orders"},
+#         # seller
+#         {"name": "View Sales Orders (for own products)", "code_name": "can_view_sales_orders"},
+#         {"name": "Update Order Status", "code_name": "can_update_order_status"},
+#         # Admin
+#         {"name": "Manage All Orders", "code_name": "can_manage_all_orders"},
+#         {"name": "Override Order Status", "code_name": "can_override_order_status"},
+#     ],
+#     "Store Analytics": [
+#         # Seller
+#         {"name": "View Seller Dashboard", "code_name": "can_view_seller_dashboard"},
+#         # Admin
+#         {"name": "View Admin Dashboard", "code_name": "can_view_admin_dashboard"},
+#     ],
+#     "Access Control": [
+#         # admin
+#         {"name": "Manage Roles & Permissions", "code_name": "can_manage_roles"},
+#         {"name": "Assign Roles to Users", "code_name": "can_assign_roles"},
+#     ],
+#     "Review Management": [
+#         # Customer
+#         {"name": "Create Review", "code_name": "can_create_review"},
+#         {"name": "Delete own review", "code_name": "can_delete_own_review"},
+#         {"name": "Edit own review", "code_name": "can_edit_own_review"},
+#         # seller
+#         {"name": "Reply to review", "code_name":"can_reply_own_product_review"},
+#         # Admin
+#         {"name": "Reply to all review", "code_name":"can_reply_all_review"},
+#         {"name": "Delete all review", "code_name":"can_delete_all_review"},
+#     ],
+# }
