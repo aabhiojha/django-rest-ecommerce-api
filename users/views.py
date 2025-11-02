@@ -317,10 +317,17 @@ class UserRoleAssignView(APIView):
     permission_classes = [IsAuthenticated, HasPermissions]
     permissions_required = "can_manage_roles"
 
-    def patch(self, request, pk):
+    def patch(self, request,pk):
         user = User.objects.get(pk=pk)
         serializer = UserRoleAssignSerializer(user, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# to create userprofile automatically as user is created
+@receiver(post_save, sender=User)
+def create_user_profile(sender, instance, created, **kwargs):
+    if created:
+        Profile.objects.create(user=instance)

@@ -332,10 +332,10 @@ class UserListSerializer(serializers.ModelSerializer):
         # This query efficiently fetches all unique permission code_names
         user_permissions = set(
             obj.roles.filter(
-                is_active = True, role__permissions__is_active=True
-            ).values_list("permissions__code_name", flat=True)
+                is_active = True
+            ).values_list("permissions__code_name", flat=True).distinct()
         )
-        return sorted(list(user_permissions))
+        return sorted([p for p in user_permissions if p])
 
 
 class UserUpdateSerializer(serializers.ModelSerializer):
@@ -426,7 +426,6 @@ class UserRoleAssignSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
-            "id",
             "roles"
         ]
 
@@ -438,5 +437,4 @@ class UserRoleAssignSerializer(serializers.ModelSerializer):
         roles = validated_data.pop("roles", None)
         if roles is not None:
             instance.roles.set(roles)
-            instance.set()
         return super().update(instance, validated_data)

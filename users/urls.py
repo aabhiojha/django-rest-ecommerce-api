@@ -33,6 +33,6 @@ urlpatterns = [
     path('role/create/', views.CreateRoleView.as_view()),
     path("role/<int:pk>/", views.RoleCRUDView.as_view()),
     # User-Role assignment    
-    path("user/role/assign/", views.UserRoleAssignView.as_view()),
+    path("user/role/assign/<int:pk>/", views.UserRoleAssignView.as_view()),
     # path("user/role/list/", views.UserRoleListView.as_view()),
 ]
