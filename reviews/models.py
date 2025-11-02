@@ -39,6 +39,7 @@ class Reply(models.Model):
     class Meta:
         ordering=["-created_at"]
         unique_together = ("seller", "reviewer")
-    
+        verbose_name_plural = "replies"
+
     def __str__(self):
         return f"Reply by {self.seller.email} to {self.reviewer.user.email}"
