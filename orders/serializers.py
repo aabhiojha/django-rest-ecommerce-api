@@ -63,14 +63,21 @@ class OrderItemsCreateSerializer(serializers.ModelSerializer):
             raise ValidationError("List of items cannot be empty")
 
         existing_items = CartItem.objects.filter(id__in=value)
+        for item in existing_items:
+            if not item.cart.user == self.context:
+                raise serializers.ValidationError(
+                    {"message": "The cart item isn't owned by you."}
+                )
+
         existing_ids = set(existing_items.values_list("id", flat=True))
+
         # gives the items that do not exist
         missing_ids = set(value) - existing_ids
 
         if missing_ids:
             raise ValidationError(f"Cart items with IDs {missing_ids} do not exist")
 
-        already_purchased = existing_items.filter(purchased=True)
+        already_purchased = existing_items.filter(is_paid=True)
         if already_purchased.exists():
             purchased_ids = list(already_purchased.values_list("id", flat=True))
             raise ValidationError(
@@ -104,24 +111,10 @@ class OrderItemsCreateSerializer(serializers.ModelSerializer):
             "count": len(order_items),
         }
 
-    def to_representation(self, instance):
-        if isinstance(instance, dict):
-            return {
-                "order_id": instance["order"].id,
-                "order_items_count": instance["count"],
-                "order_items": [
-                    {
-                        "id": item.id,
-                        "product_name": item.item.product.name,
-                        "quantity": item.quantity,
-                        "price": float(item.item.product.price),
-                        "total_price": float(item.item.product.price * item.quantity),
-                    }
-                    for item in instance["order_items"]
-                ],
-                "total_amount": sum(
-                    float(item.item.product.price * item.quantity)
-                    for item in instance["order_items"]
-                ),
-            }
-        return super().to_representation(instance)
+class UpdateOrderStatusSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Order
+        fields = [
+            "id",
+            "status"
+        ]

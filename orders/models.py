@@ -46,6 +46,7 @@ class OrderItems(models.Model):
     # only one item per order
     class Meta:
         unique_together = ["order", "item"]
+        ordering = ["id"]
 
     def __str__(self):
         return f"{self.quantity} x {self.item.product.name} in Order {self.order.id}"
