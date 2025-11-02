@@ -49,7 +49,7 @@ class Command(BaseCommand):
         self.stdout.write('Creating categories...')
         categories = self._create_categories(num_categories)
         self.stdout.write(self.style.SUCCESS(f'✓ Created {len(categories)} categories'))
-
+        
         # Create products
         self.stdout.write('Creating products...')
         products = self._create_products(num_products, categories, user)
@@ -70,7 +70,7 @@ class Command(BaseCommand):
     def _get_or_create_default_user(self):
         """Get or create a default user for products"""
         user, created = User.objects.get_or_create(
-            email='seller@example.com',
+            email='seller1@gmail.com',
             defaults={
                 'first_name': 'Default',
                 'last_name': 'Seller',

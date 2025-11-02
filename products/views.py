@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from core.permissions import HasPermissions
+from users.models import User
 
 # from rest_framework import filters
 # from django_filters.rest_framework import DjangoFilterBackend
@@ -81,7 +82,6 @@ class ProductDetailAPIView(generics.RetrieveAPIView):
     queryset = Product.objects.prefetch_related("reviews", "images", "varients")
     lookup_field = "pk"
     serializer_class = ProductDetailSerializer
-    permission_classes = [IsAuthenticated]
 
 
 class ProductDeleteAPIView(generics.DestroyAPIView):
@@ -91,3 +91,14 @@ class ProductDeleteAPIView(generics.DestroyAPIView):
 
     def get_queryset(self):
         return Product.objects.filter(user=self.request.user)
+
+class SellerProductListAPIView(generics.ListAPIView):
+    serializer_class = ProductListSerializer
+    permission_classes = [IsAuthenticated, HasPermissions]
+    permissions_required = ["can_view_own_products"]
+
+    def get_queryset(self):
+        user = self.request.user
+        queryset = Product.objects.filter(user=user)
+        return queryset
+    

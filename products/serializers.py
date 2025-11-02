@@ -107,8 +107,10 @@ class ProductListSerializer(serializers.ModelSerializer):
             "long_description",
             "price",
             "sku",
+            "quantity",
             "brand",
             "primary_image",
+            "stock_status",
             "weight",
             "dimensions",
             "is_featured",
@@ -153,6 +155,7 @@ class CategoryProductListSerializer(serializers.ModelSerializer):
 class ProductDetailSerializer(serializers.ModelSerializer):
     varients = ProductVarientSerializer(many=True, read_only=True)
     images = ProductImageSerializer(many=True, read_only=True)
+    # reviews = ListReviewSerializer(many=True, read_only=True)
     reviews = ListReviewSerializer(many=True, read_only=True)
 
     class Meta:
@@ -163,7 +166,6 @@ class ProductDetailSerializer(serializers.ModelSerializer):
             "category",
             "varients",
             "images",
-            "reviews",
             "additional_info",
             "description",
             "long_description",
@@ -176,7 +178,11 @@ class ProductDetailSerializer(serializers.ModelSerializer):
             "is_digital",
             "created_at",
             "updated_at",
+            "reviews"
         ]
+
+    # def get_reviews(self, )
+
 
 
 class ProductCreateSerializer(serializers.ModelSerializer):
@@ -239,6 +245,8 @@ class ProductUpdateSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
     def update(self, instance, validated_data):
+
+        
         variant_data = validated_data.pop("varients", None)
 
         # updating values in the product instance

@@ -37,7 +37,7 @@ class Product(BaseModel):
         related_name="products",
         null=True,
         blank=True,
-    ) 
+    )
     description = models.TextField(default="", help_text="Short Description")
     long_description = models.TextField(
         blank=True, default="", help_text="Long Description"
@@ -54,6 +54,14 @@ class Product(BaseModel):
     is_featured = models.BooleanField(default=False)
     is_digital = models.BooleanField(default=False)
     additional_info = models.JSONField(default=dict, blank=True, null=True)
+
+    @property
+    def stock_status(self):
+        if self.quantity <= 10:
+            return "LOW_STOCK"
+        elif self.quantity == 0:
+            return "OUT_OF_STOCK"
+        return "IN_STOCK"
 
     class Meta:
         ordering = ["id"]
