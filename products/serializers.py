@@ -115,6 +115,8 @@ class ProductListSerializer(serializers.ModelSerializer):
             "dimensions",
             "is_featured",
             "is_digital",
+            "average_rating",
+            "review_count"
         ]
 
     def get_primary_image(self, obj):
@@ -178,7 +180,9 @@ class ProductDetailSerializer(serializers.ModelSerializer):
             "is_digital",
             "created_at",
             "updated_at",
-            "reviews"
+            "reviews",
+            "average_rating",
+            "review_count"
         ]
 
     # def get_reviews(self, )

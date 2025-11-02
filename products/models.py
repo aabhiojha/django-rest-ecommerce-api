@@ -54,6 +54,9 @@ class Product(BaseModel):
     is_featured = models.BooleanField(default=False)
     is_digital = models.BooleanField(default=False)
     additional_info = models.JSONField(default=dict, blank=True, null=True)
+    # Review related stuff
+    average_rating = models.FloatField(default=0.0,help_text="Average of product ratings")
+    review_count = models.PositiveBigIntegerField(default=0, help_text="Number of reviews")
 
     @property
     def stock_status(self):
