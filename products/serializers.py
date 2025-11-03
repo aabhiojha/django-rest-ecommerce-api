@@ -300,17 +300,16 @@ class SellerProductOrdersSerializer(serializers.ModelSerializer):
         model = OrderItems
         fields = [
             "order",
-            "item",
-            "quantity",
-            "created_at",
-            "product_name",
             "sku",
-            "category",
-            "description",
+            "product_name",
+            "quantity",
             "unit_price",
-            "variant",
-            "brand",
             "total_price",
+            "variant",
+            "description",
+            "brand",
+            "category",
             "order_status",
+            "created_at",
         ]
         read_only_fields = fields
