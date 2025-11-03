@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from core.permissions import HasPermissions
+from orders.models import OrderItems
 from users.models import User
 
 # from rest_framework import filters
@@ -16,6 +17,7 @@ from .serializers import (
     ProductListSerializer,
     ProductDetailSerializer,
     ProductUpdateSerializer,
+    SellerProductOrdersSerializer,
 )
 
 from .models import Category, ProductVarient, ProductImage, Product
@@ -102,3 +104,12 @@ class SellerProductListAPIView(generics.ListAPIView):
         queryset = Product.objects.filter(user=user)
         return queryset
     
+
+class SellerProductOrdersAPIView(generics.ListAPIView):
+    serializer_class = SellerProductOrdersSerializer
+
+    def get_queryset(self):
+        product_owner = self.request.user
+        queryset = OrderItems.objects.filter(item__product__user=product_owner)
+        return queryset
+        

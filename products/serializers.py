@@ -1,6 +1,8 @@
 from rest_framework import serializers
 
 from cart.models import CartItem
+from orders.models import OrderItems
+from orders.serializers import OrderItemSerializer
 from reviews.serializers import ListReviewSerializer
 from .models import Category, Product, ProductImage, ProductVarient
 from django.utils.text import slugify
@@ -117,7 +119,7 @@ class ProductListSerializer(serializers.ModelSerializer):
             "is_featured",
             "is_digital",
             "average_rating",
-            "review_count"
+            "review_count",
         ]
 
     def get_primary_image(self, obj):
@@ -183,11 +185,10 @@ class ProductDetailSerializer(serializers.ModelSerializer):
             "updated_at",
             "reviews",
             "average_rating",
-            "review_count"
+            "review_count",
         ]
 
     # def get_reviews(self, )
-
 
 
 class ProductCreateSerializer(serializers.ModelSerializer):
@@ -249,15 +250,17 @@ class ProductUpdateSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
-        
+
     def update(self, instance, validated_data):
         # check if the item is in anyone's cart
         # print(instance.id)
         cart_items = CartItem.objects.all()
         for item in cart_items:
             if instance.id == item.product.id:
-                raise serializers.ValidationError("The product is already in cart and it cannot be updated now.")
-            
+                raise serializers.ValidationError(
+                    "The product is already in cart and it cannot be updated now."
+                )
+
         print(cart_items)
         variant_data = validated_data.pop("varients", None)
 
@@ -266,7 +269,7 @@ class ProductUpdateSerializer(serializers.ModelSerializer):
             setattr(instance, attr, value)
 
         if "name" in validated_data and "slug" not in validated_data:
-            instance.slug = slugify_name(Product,validated_data)
+            instance.slug = slugify_name(Product, validated_data)
 
             instance.save()
 
@@ -274,6 +277,40 @@ class ProductUpdateSerializer(serializers.ModelSerializer):
                 instance.varients.all().delete()
                 if variant_data:
                     ProductVarient.objects.bulk_create(
-                        [ProductVarient(product=instance, **item) for item in variant_data]
+                        [
+                            ProductVarient(product=instance, **item)
+                            for item in variant_data
+                        ]
                     )
         return instance
+
+
+class SellerProductOrdersSerializer(serializers.ModelSerializer):
+    product_name = serializers.CharField(source="item.product")
+    sku = serializers.CharField(source="item.product.sku")
+    category = serializers.CharField(source="item.product.category")
+    description = serializers.CharField(source="item.product.description")
+    unit_price = serializers.FloatField(source="item.unit_price")
+    variant = serializers.CharField(source="item.product_varient")
+    brand =  serializers.CharField(source="item.product.brand")
+    # total_price = serializers.SerializerMethodField()
+    order_status = serializers.CharField(source="order.status")
+
+    class Meta:
+        model = OrderItems
+        fields = [
+            "order",
+            "item",
+            "quantity",
+            "created_at",
+            "product_name",
+            "sku",
+            "category",
+            "description",
+            "unit_price",
+            "variant",
+            "brand",
+            "total_price",
+            "order_status",
+        ]
+        read_only_fields = fields
