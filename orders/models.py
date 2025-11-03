@@ -36,9 +36,9 @@ class Order(models.Model):
 
 class OrderItems(models.Model):
     order = models.ForeignKey(
-        Order, related_name="order_items", on_delete=models.CASCADE
+        Order, on_delete=models.CASCADE, related_name="items"
     )
-    item = models.ForeignKey(CartItem, on_delete=models.CASCADE)
+    item = models.ForeignKey(CartItem, on_delete=models.CASCADE, related_name="cart_items")
     quantity = models.PositiveIntegerField(default=1)
     created_at = models.DateTimeField(auto_now_add=True)
 
