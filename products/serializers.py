@@ -313,3 +313,21 @@ class SellerProductOrdersSerializer(serializers.ModelSerializer):
             "created_at",
         ]
         read_only_fields = fields
+
+
+class SellerStatsSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = OrderItems
+        fields = [
+            "total_price",
+        ]
+        read_only_fields = fields
+
+    # def to_representation(self, instance):
+    #     data = super().to_representation(instance)
+    #     grand_total = instance.total_price
+    #     return {
+    #         "results": data,
+    #         "grand_total": grand_total,
+    #     }

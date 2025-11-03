@@ -14,4 +14,5 @@ urlpatterns = [
     path("delete/<int:pk>/", views.ProductDeleteAPIView.as_view()),
     path("my_list/",views.SellerProductListAPIView.as_view()),
     path("orders/list/", views.SellerProductOrdersAPIView.as_view()),
+    path("transaction/seller/", views.SellerStatsAPIView.as_view()),
 ]

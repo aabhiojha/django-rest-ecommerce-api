@@ -18,6 +18,7 @@ from .serializers import (
     ProductDetailSerializer,
     ProductUpdateSerializer,
     SellerProductOrdersSerializer,
+    SellerStatsSerializer,
 )
 
 from .models import Category, ProductVarient, ProductImage, Product
@@ -107,9 +108,46 @@ class SellerProductListAPIView(generics.ListAPIView):
 
 class SellerProductOrdersAPIView(generics.ListAPIView):
     serializer_class = SellerProductOrdersSerializer
+    permission_classes = [IsAuthenticated, HasPermissions]
+    permissions_required = ["can_view_seller_dashboard"]
 
     def get_queryset(self):
         product_owner = self.request.user
-        queryset = OrderItems.objects.filter(item__product__user=product_owner)
-        return queryset
+        order_items = OrderItems.objects.filter(item__product__user=product_owner)
+        return order_items
+    
+
+# class SellerStatsAPIView(generics.ListAPIView):
+#     serializer_class = SellerStatsSerializer
+#     permission_classes = [IsAuthenticated, HasPermissions]
+#     permissions_required = ["can_view_seller_dashboard"]
+
+#     def get_queryset(self):
+#         product_owner = self.request.user
+#         order_items = OrderItems.objects.filter(item__product__user=product_owner, order__status="confirmed")
+#         GRAND_TOTAL = 0
+#         for item in order_items:
+#             GRAND_TOTAL += item.total_price
+#         print(GRAND_TOTAL)
+#         return order_items
+    
+
+class SellerStatsAPIView(generics.ListAPIView):
+    serializer_class = SellerStatsSerializer
+    permission_classes = [IsAuthenticated, HasPermissions]
+    permissions_required = ["can_view_seller_dashboard"]
+
+    def get(self, request):
+        order_items = OrderItems.objects.filter(item__product__user=self.request.user, order__status="confirmed")
         
+        grand_total = 0
+        for item in order_items:
+            grand_total += item.total_price
+        
+        serializer = SellerStatsSerializer(order_items, many=True)
+        return Response(
+            {
+            "result": serializer.data,
+            "grand_total": grand_total
+        }
+        )
