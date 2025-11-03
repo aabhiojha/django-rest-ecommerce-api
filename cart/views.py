@@ -1,13 +1,10 @@
 from rest_framework import generics
-from .models import Cart, CartItem, Favourite
+from .models import Cart, CartItem
 from .serializers import (
     CartItemSerializer,
     CartSerializer,
     UpdateCartItemQuantitySerializer,
     AddItemSerializer,
-    ListFavouriteSerializer,
-    RemoveFavouriteSerializer,
-    CreateFavouriteSerializer,
 )
 from rest_framework.response import Response
 from rest_framework import status
@@ -102,27 +99,3 @@ class CartItemDeleteAPIView(APIView):
             )
         cart_item.delete()
         return Response(f"The {cart_item.product.name} was deleted from cart.")
-
-
-class ListFavouriteAPIView(generics.ListAPIView):
-    queryset = Favourite.objects.all()
-    serializer_class = ListFavouriteSerializer
-    permission_classes = [IsAuthenticated, HasPermissions]
-    permissions_required = ["can_manage_own_cart"]
-
-
-class CreateFavouriteAPIView(generics.CreateAPIView):
-    serializer_class = CreateFavouriteSerializer
-    permission_classes = [IsAuthenticated, HasPermissions]
-    permissions_required = ["can_manage_own_cart"]
-
-
-class DeleteFavouriteAPIView(generics.DestroyAPIView):
-    queryset = Favourite.objects.all()
-    lookup_field = "pk"
-    serializer_class = RemoveFavouriteSerializer
-    permission_classes = [IsAuthenticated, HasPermissions]
-    permissions_required = ["can_manage_own_cart"]
-
-    def get_queryset(self):
-        return self.queryset.filter(user=self.request.user)

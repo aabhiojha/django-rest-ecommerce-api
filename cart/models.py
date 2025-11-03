@@ -66,18 +66,3 @@ class CartItem(models.Model):
 
     class Meta:
         unique_together = ["cart", "product", "product_varient"]
-
-
-class Favourite(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="favourites")
-    product = models.ForeignKey(
-        Product, on_delete=models.CASCADE, related_name="favourites"
-    )
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        unique_together = ["user", "product"]
-        ordering = ["-created_at"]
-
-    def __str__(self):
-        return f"{self.user.email} likes {self.product.name}"
