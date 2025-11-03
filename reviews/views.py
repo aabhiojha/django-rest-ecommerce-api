@@ -28,7 +28,8 @@ class CreateReviewView(APIView):
     permissions_required = "can_create_review"
 
     def post(self, request):
-        serializer = CreateReviewSerializer(data=request.data)
+        # print(request.user)
+        serializer = CreateReviewSerializer(data=request.data, context={"request":request})
         if serializer.is_valid():
             serializer.save(user=request.user)
             return Response(serializer.data, status=status.HTTP_200_OK)

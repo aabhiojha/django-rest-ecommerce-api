@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from .models import Reply, Review
-
+from cart.models import Cart, CartItem
 
 class ReplySerializer(serializers.ModelSerializer):
     class Meta:
@@ -25,12 +25,6 @@ class ListReviewSerializer(serializers.ModelSerializer):
             "replies"
         ]
 
-    # def get_reply(self, review):
-    #     replies = review.replies.all()
-    #     print(replies)
-    #     return replies
-
-
 
 class CreateReviewSerializer(serializers.ModelSerializer):
     class Meta:
@@ -41,6 +35,18 @@ class CreateReviewSerializer(serializers.ModelSerializer):
             "comment",
         ]
 
+    # need to check if the product is already bought by the user
+    # before leaving a review about it.
+    def validate(self, attrs):
+        user = self.context.get("request").user
+        print(attrs)
+        product = attrs.get("product")
+        print(product.id)
+        # get the cartitem object with that product and user
+        cart_item = CartItem.objects.filter(product=product, is_paid=True, cart__user=user)
+        if not cart_item:
+            raise serializers.ValidationError("The product does not exist or is not paid to leave review.")
+        return super().validate(attrs)
 
 class UpdateReviewSerializer(serializers.ModelSerializer):
     class Meta:
@@ -49,7 +55,7 @@ class UpdateReviewSerializer(serializers.ModelSerializer):
             "rating",
             "comment",
         ]
-
+    
 
 class ReplyToReviewSerializer(serializers.ModelSerializer):
     class Meta:
