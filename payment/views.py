@@ -38,6 +38,8 @@ class PaymentView(APIView):
         try:
             order_id = serializer.validated_data["order_id"]
             order = Order.objects.get(id=order_id, user=request.user)
+            if order.status == "confirmed":
+                return Response(f"The order id: {order} is already confirmed", status=status.HTTP_400_BAD_REQUEST)
 
             # line items for Stripe
             line_items = []
@@ -74,6 +76,7 @@ class PaymentView(APIView):
                     }
                 },
             )
+            print(checkout_session)
 
             # create or update Payment object
             payment, created = Payment.objects.update_or_create(
@@ -224,11 +227,11 @@ class PaymentCancelView(APIView):
 
 
 class PaymentListView(APIView):
-    """List user's payments"""
+    """List all payments"""
 
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        payments = Payment.objects.filter(user=request.user)
+        payments = Payment.objects.filter()
         serializer = PaymentSerializer(payments, many=True)
         return Response(serializer.data)
