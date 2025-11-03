@@ -1,5 +1,6 @@
 from rest_framework import serializers
 
+from cart.models import CartItem
 from reviews.serializers import ListReviewSerializer
 from .models import Category, Product, ProductImage, ProductVarient
 from django.utils.text import slugify
@@ -248,9 +249,16 @@ class ProductUpdateSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
-    def update(self, instance, validated_data):
-
         
+    def update(self, instance, validated_data):
+        # check if the item is in anyone's cart
+        # print(instance.id)
+        cart_items = CartItem.objects.all()
+        for item in cart_items:
+            if instance.id == item.product.id:
+                raise serializers.ValidationError("The product is already in cart and it cannot be updated now.")
+            
+        print(cart_items)
         variant_data = validated_data.pop("varients", None)
 
         # updating values in the product instance
@@ -268,5 +276,4 @@ class ProductUpdateSerializer(serializers.ModelSerializer):
                     ProductVarient.objects.bulk_create(
                         [ProductVarient(product=instance, **item) for item in variant_data]
                     )
-
         return instance

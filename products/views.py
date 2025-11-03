@@ -71,7 +71,7 @@ class ProductUpdateAPIView(APIView):
 
     def patch(self, request, pk):
         product_instance = Product.objects.get(id=pk, user=self.request.user)
-        serializer = ProductUpdateSerializer(product_instance,data=request.data, partial=True)
+        serializer = ProductUpdateSerializer(product_instance,data=request.data, context={"product_id":pk}, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
