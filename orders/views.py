@@ -38,7 +38,7 @@ class OrderListAPIView(APIView):
 #         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-# filters chaiyooo
+# filters chaiyooo so generics
 class OrderListAllAPIView(generics.ListAPIView):
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
