@@ -1,18 +1,18 @@
 meta {
-  name: Add Cart Item
+  name: update order status
   type: http
   seq: 2
 }
 
-post {
-  url: http://127.0.0.1:8000/cart/item/add/
+patch {
+  url: 127.0.0.1:8000/order/update_status/2e655e7bdb08/
   body: json
   auth: inherit
 }
 
 body:json {
   {
-    "product":1
+    "status":"Confirmed"
   }
 }
 

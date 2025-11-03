@@ -1,0 +1,24 @@
+meta {
+  name: create cart items
+  type: http
+  seq: 9
+}
+
+post {
+  url: 127.0.0.1:8000/cart/item/add/
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "product":3,
+    "product_varient": 2,
+    "quantity": 10
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
