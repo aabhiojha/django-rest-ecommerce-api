@@ -1,3 +1,4 @@
+from datetime import timedelta
 from django.db import models
 from users.models import User
 from core.utils.order_id_gen import unique_id
@@ -17,6 +18,7 @@ class Order(models.Model):
     )
     user = models.ForeignKey(User, on_delete=models.DO_NOTHING, related_name="orders")
     status = models.CharField(choices=STATUS_CHOICES, max_length=20, default="pending")
+    discount = models.ForeignKey("Discount", on_delete=models.DO_NOTHING, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -54,3 +56,21 @@ class OrderItems(models.Model):
     @property
     def total_price(self):
         return self.item.product.price * self.quantity
+
+
+from .validators import percentage_validator
+class Discount(models.Model):
+    code_name = models.CharField(max_length=100, primary_key=True, unique=True)
+    user_count = models.PositiveBigIntegerField()
+    percentage_off = models.IntegerField(validators=[percentage_validator])
+    from_date = models.DateTimeField(default=timezone.now)
+    to_date = models.DateTimeField(default=(timezone.now() + timedelta(days=7)))
+    
+    @property
+    def is_active(self):
+        now = timezone.now
+        return self.from_date >= now >= self.to_date
+
+    def __str__(self):
+        return f"{self.code_name}"
+    

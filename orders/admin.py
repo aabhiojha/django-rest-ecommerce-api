@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Order, OrderItems
+from .models import Discount, Order, OrderItems
 
 
 class OrderItemsInline(admin.TabularInline):
@@ -22,3 +22,6 @@ class OrderItemsAdmin(admin.ModelAdmin):
     list_display = ["order", "item", "quantity", "total_price"]
     list_filter = ["order__status", "created_at"]
     readonly_fields = ["total_price", "created_at"]
+
+
+admin.site.register(Discount)

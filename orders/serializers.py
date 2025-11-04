@@ -3,6 +3,7 @@ from rest_framework.exceptions import ValidationError
 
 from orders.models import Order, OrderItems
 from cart.models import CartItem
+from orders.models import Discount
 
 
 class OrderSerializer(serializers.ModelSerializer):
@@ -118,3 +119,9 @@ class UpdateOrderStatusSerializer(serializers.ModelSerializer):
             "id",
             "status"
         ]
+
+
+class DiscountSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Discount
+        fields = "__all__"

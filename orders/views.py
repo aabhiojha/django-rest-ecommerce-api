@@ -3,17 +3,19 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView  # Import APIView
+from orders.serializers import DiscountSerializer
 
 from orders.filters import OrderFilter
-from orders.models import Order, OrderItems
+from orders.models import  Discount, Order, OrderItems
 from .serializers import (
     OrderItemsCreateSerializer,
     OrderSerializer,
     OrderItemSerializer,
-    UpdateOrderStatusSerializer
+    UpdateOrderStatusSerializer,
 )
 
 from core.permissions import HasPermissions
+
 
 class OrderListAPIView(APIView):
     serializer_class = OrderSerializer
@@ -104,7 +106,9 @@ class OrderItemsCreateAPIView(APIView):
             order = Order.objects.create(user=request.user, status="pending")
             mutable_data["order"] = order.id
 
-        serializer = OrderItemsCreateSerializer(data=mutable_data, context=self.request.user)
+        serializer = OrderItemsCreateSerializer(
+            data=mutable_data, context=self.request.user
+        )
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -144,7 +148,7 @@ class UserOrdersListView(APIView):
         orders = Order.objects.filter(user=request.user)
         serializer = OrderSerializer(orders, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
-    
+
 
 # seller can override orde_status
 class UpdateOrderStatusView(APIView):
@@ -152,12 +156,50 @@ class UpdateOrderStatusView(APIView):
     permissions_required = ["can_override_order_status"]
     serializer_class = UpdateOrderStatusSerializer
 
-    def patch(self, request,pk):
+    def patch(self, request, pk):
         data = request.data
         order = Order.objects.get(id=pk)
-        serializer = UpdateOrderStatusSerializer(order,data=data, partial=True)
+        serializer = UpdateOrderStatusSerializer(order, data=data, partial=True)
         if serializer.is_valid():
             # Set the user to the authenticated user before saving
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+# Discount Related Logic
+class DiscountCodeCRUD(APIView):
+    # permission_classes = [IsAuthenticated, HasPermissions]
+    permission_classes = [IsAuthenticated]
+    # permissions_required = ["can_override_order_status"]
+    serializer_class = DiscountSerializer
+
+    def get(self, request):
+        queryset = Discount.objects.all()
+        serializer = DiscountSerializer(queryset, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request):
+        data = request.data
+        serializer = DiscountSerializer(data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def patch(self, request, code_name):
+        discount_obj = Discount.objects.get(code_name=code_name)
+        serializer = DiscountSerializer(discount_obj, request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def delete(self, request, code_name):
+        try:
+            discount_obj = Discount.objects.get(code_name=code_name)
+        except Discount.DoesNotExist:
+            return Response("The discount object does not exist", status=status.HTTP_404_NOT_FOUND)
+        discount_obj.delete()
+        return Response(f"The discount object {discount_obj} is deleted",status=status.HTTP_200_OK)
