@@ -169,9 +169,9 @@ class UpdateOrderStatusView(APIView):
 
 
 # Discount Related Logic
-class DiscountCodeCRUD(APIView):
+class DiscountCRView(APIView):
     # permission_classes = [IsAuthenticated, HasPermissions]
-    permission_classes = [IsAuthenticated]
+    permission_classes = []
     # permissions_required = ["can_override_order_status"]
     serializer_class = DiscountSerializer
 
@@ -181,16 +181,22 @@ class DiscountCodeCRUD(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request):
-        data = request.data
-        serializer = DiscountSerializer(data)
+        serializer = DiscountSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class DiscountUDView(APIView):
+    # permission_classes = [IsAuthenticated, HasPermissions]
+    permission_classes = [IsAuthenticated]
+    # permissions_required = ["can_override_order_status"]
+    serializer_class = DiscountSerializer
 
     def patch(self, request, code_name):
         discount_obj = Discount.objects.get(code_name=code_name)
-        serializer = DiscountSerializer(discount_obj, request.data, partial=True)
+        serializer = DiscountSerializer(discount_obj, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
@@ -200,6 +206,6 @@ class DiscountCodeCRUD(APIView):
         try:
             discount_obj = Discount.objects.get(code_name=code_name)
         except Discount.DoesNotExist:
-            return Response("The discount object does not exist", status=status.HTTP_404_NOT_FOUND)
+            return Response({"message":"The discount object does not exist"}, status=status.HTTP_204_NO_CONTENT)
         discount_obj.delete()
-        return Response(f"The discount object {discount_obj} is deleted",status=status.HTTP_200_OK)
+        return Response({"message":f"The discount object {discount_obj} is deleted"},status=status.HTTP_200_OK)

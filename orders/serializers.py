@@ -9,10 +9,18 @@ from orders.models import Discount
 class OrderSerializer(serializers.ModelSerializer):
     order_items_count = serializers.SerializerMethodField()
     total_amount = serializers.SerializerMethodField()
+    discount_code = serializers.CharField(required=False, max_length=30)
 
     class Meta:
         model = Order
-        fields = ["id", "user", "status", "order_items_count", "total_amount"]
+        fields = [
+            "id",
+            "user",
+            "status",
+            "order_items_count",
+            "total_amount",
+            "discount_code",
+        ]
         read_only_fields = ["id"]
 
     def get_order_items_count(self, obj):
@@ -112,13 +120,11 @@ class OrderItemsCreateSerializer(serializers.ModelSerializer):
             "count": len(order_items),
         }
 
+
 class UpdateOrderStatusSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
-        fields = [
-            "id",
-            "status"
-        ]
+        fields = ["id", "status"]
 
 
 class DiscountSerializer(serializers.ModelSerializer):

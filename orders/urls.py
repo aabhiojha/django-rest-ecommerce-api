@@ -1,6 +1,7 @@
 from django.urls import path
 from .views import (
-    DiscountCodeCRUD,
+    DiscountCRView,
+    DiscountUDView,
     OrderListAPIView,
     # OrderCreateAPIView,
     OrderDetailAPIView,
@@ -19,6 +20,6 @@ urlpatterns = [
     path("<str:order_id>/items/", OrderItemListView.as_view(), name="orderitem-list"),
     path("user/orders/", UserOrdersListView.as_view(), name="user-orders"),
     path("update_status/<str:pk>/", UpdateOrderStatusView.as_view(), name="update_order_status"),
-    path('discounts/', DiscountCodeCRUD.as_view(), name='discount-list-create'),
-    path('discounts/<str:code_name>/', DiscountCodeCRUD.as_view(), name='discount-detail'),
+    path('discounts/', DiscountCRView.as_view(), name='discount-list-create'),
+    path('discounts/<str:code_name>/', DiscountUDView.as_view(), name='discount-detail'),
 ]
