@@ -4,12 +4,19 @@ meta {
   seq: 8
 }
 
-get {
-  url: 
-  body: none
+post {
+  url: 127.0.0.1:8000/payment/
+  body: json
   auth: inherit
+}
+
+body:json {
+  {
+  "order_id":"d45f18dbe276"
+  }
 }
 
 settings {
   encodeUrl: true
+  timeout: 0
 }

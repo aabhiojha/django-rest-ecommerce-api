@@ -1,16 +1,15 @@
 meta {
-  name: Get Order
+  name: get all ordered products
   type: http
-  seq: 3
+  seq: 6
 }
 
 get {
-  url: 127.0.0.1:8000/order/171b27d70a4d/
+  url: http://127.0.0.1:8000/product/orders/list/
   body: none
   auth: inherit
 }
 
 settings {
   encodeUrl: true
-  timeout: 0
 }
