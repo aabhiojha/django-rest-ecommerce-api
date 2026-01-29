@@ -14,3 +14,9 @@ services:
 
 volumes:
   pg_data:
+
+networks:
+  default:
+    driver: bridge
+    name: ecommerce_network
+    
