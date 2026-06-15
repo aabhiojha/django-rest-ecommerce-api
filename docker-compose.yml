@@ -8,9 +8,28 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:
-      - "5432:5432"
+      - "5438:5432"
     volumes:
       - pg_data:/var/lib/postgresql/data
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ecommerce_web
+    restart: always
+    depends_on:
+      - postgres
+    env_file:
+      - .env
+    environment:
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+    ports:
+      - "8000:8000"
+    command: >
+      sh -c "python manage.py migrate &&
+      gunicorn core.wsgi:application --bind 0.0.0.0:8000 --workers 2"
 
 volumes:
   pg_data:

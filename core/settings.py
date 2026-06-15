@@ -110,7 +110,7 @@ DATABASES = {
         "USER": config("DATABASE_USER"),
         "PASSWORD": config("DATABASE_PASSWORD"),
         "HOST": config("DATABASE_HOST", default="localhost"),
-        "PORT": config("DATABAS_PORT", cast=int, default=5432),
+        "PORT": config("DATABASE_PORT", cast=int, default=config("DATABAS_PORT", cast=int, default=5438)),
     }
 }
 
